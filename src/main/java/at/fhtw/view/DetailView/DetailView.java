@@ -3,6 +3,8 @@ package at.fhtw.view.DetailView;
 import at.fhtw.model.InputData;
 import at.fhtw.model.InputTable;
 import at.fhtw.view.View;
+import org.knowm.xchart.XChartPanel;
+import org.knowm.xchart.XYChart;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -22,6 +24,12 @@ public class DetailView implements View {
     private ImagePanel imagePanel;
     private JPanel controlPanel;
     private JPanel plotPanel;
+    private MultiLinePlot plotter;
+
+    // SETTINGS
+    private boolean playbackMode = false;
+    private Timer playbackTimer;
+    private int playBackSpeed = 15;
 
     public DetailView(InputTable data){
         this.data = data;
@@ -96,7 +104,8 @@ public class DetailView implements View {
 
         JPanel bottomPanel = new JPanel(new GridBagLayout());
 
-        plotPanel = createColoredPanel("Plot Panel", Color.decode("#FFC107"));
+        this.plotter = new MultiLinePlot(this.data);
+        plotPanel = new XChartPanel<XYChart>(this.plotter.getChart());
         GridBagConstraints gbcPlot = new GridBagConstraints();
         gbcPlot.fill = GridBagConstraints.BOTH;
         gbcPlot.gridx = 0;
@@ -134,23 +143,106 @@ public class DetailView implements View {
         label.setForeground(Color.WHITE);
         panel.add(label);
 
-        JTextField idField = new JTextField(8);
+        JTextField idField = new JTextField("0",8);
         JButton loadButton = new JButton("Load Frame");
         loadButton.addActionListener(e -> {
             try{
                 int id = Integer.parseInt(idField.getText());
                 currentId = id;
 
-                loadPicture();
-                loadData();
+                reload();
             }catch(NumberFormatException ex){
                 JOptionPane.showMessageDialog(frame, "Please enter a valid number.");
             }
         });
+
+        // Previouse Button
+        JButton prev = new JButton("<");
+        prev.addActionListener(e -> {
+            if (currentId > 0) {
+                currentId--;
+                reload();
+            }
+        });
+
+        // Play Button
+        JButton play = new JButton("Play/Pause");
+        play.addActionListener(e -> {
+            // Already Playing
+            if(this.playbackMode){
+                pausePlaybackMode();
+            // Not Already Playing
+            }else{
+                startPlaybackMode();
+            }
+        });
+
+        // Adjust speed of playback
+        JTextField playbackSpeed = new JTextField(this.playBackSpeed + "",8);
+        JButton adjustSpeed = new JButton("adjust Speed");
+        adjustSpeed.addActionListener(e -> {
+            try{
+                this.playBackSpeed = Integer.parseInt(playbackSpeed.getText());
+                JOptionPane.showMessageDialog(frame, "Successfully changed playBackSpeed to " + this.playBackSpeed + " fps ");
+                pausePlaybackMode();
+                startPlaybackMode();
+            }catch(NumberFormatException ex){
+                JOptionPane.showMessageDialog(frame, "Please enter a valid number.");
+            }
+        });
+
+        // Next Button
+        JButton next = new JButton(">");
+        next.addActionListener(e -> {
+            if (currentId < data.getInputTable().size() - 1) {
+                currentId++;
+                reload();
+            }
+        });
+
         panel.add(idField);
         panel.add(loadButton);
+        panel.add(playbackSpeed);
+        panel.add(adjustSpeed);
+        panel.add(prev);
+        panel.add(play);
+        panel.add(next);
 
         return panel;
+    }
+
+    private void startPlaybackMode() {
+        if (playbackMode) {
+            return; // Avoid starting multiple timers
+        }
+        this.playbackMode = true;
+
+        // 15 frames per second -> 1000ms / 15fps ≈ 67ms delay between frames
+        int delay = 1000 / this.playBackSpeed;
+        playbackTimer = new Timer(delay, e -> {
+            if (currentId < data.getInputTable().size() - 1) {
+                currentId++;
+                reload();
+            } else {
+                // Reached the end, stop playback
+                pausePlaybackMode();
+            }
+        });
+        playbackTimer.start();
+    }
+
+    private void pausePlaybackMode() {
+        if (playbackTimer != null && playbackTimer.isRunning()) {
+            playbackTimer.stop();
+        }
+        this.playbackMode = false;
+    }
+
+    private void reload() {
+        loadPicture();
+        loadData();
+        plotter.setMarker(currentId);
+        plotPanel.repaint();
     }
 
     private JPanel createColoredPanel(String labelText, Color color) {
