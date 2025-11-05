@@ -37,5 +37,8 @@ build/
 ### Mac OS ###
 .DS_Store
 
+### IntelliJ ###
+.idea/
+
 ### Ressources Pictures and csv ###
 data/
