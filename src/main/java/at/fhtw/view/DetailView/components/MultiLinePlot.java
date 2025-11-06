@@ -1,7 +1,8 @@
-package at.fhtw.view.DetailView;
+package at.fhtw.view.DetailView.components;
 
 import at.fhtw.model.InputData;
 import at.fhtw.model.InputTable;
+import lombok.Getter;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries;
@@ -12,8 +13,10 @@ import java.awt.*;
 import java.util.List;
 import java.util.stream.IntStream;
 
+@Getter
 public class MultiLinePlot {
     private final XYChart chart;
+    private static final String MARKER_SERIES_NAME = "marker";
 
     public MultiLinePlot(InputTable table) {
         this.chart = createChart(table);
@@ -21,20 +24,21 @@ public class MultiLinePlot {
 
     private XYChart createChart(InputTable table) {
         final XYChart chart = new XYChartBuilder()
-                .xAxisTitle("Frames")
-                .yAxisTitle("Confidence")
                 .build();
 
         // Customize Chart
         chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNE);
         chart.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Area);
         chart.getStyler().setMarkerSize(0);
+        chart.getStyler().setYAxisMin(0.0); // Ensure Y-axis starts at 0
+        chart.getStyler().setYAxisMax(1.0);
 
         // Return empty chart if there is no data
         List<InputData> data = table.getInputTable();
         if (data == null || data.isEmpty()) {
             return chart;
         }
+
 
         double[] frameData = IntStream.range(0, data.size()).mapToDouble(i -> i).toArray();
 
@@ -63,24 +67,21 @@ public class MultiLinePlot {
         return chart;
     }
 
-    public XYChart getChart() {
-        return chart;
-    }
 
     public void setMarker(int frameId) {
-        // Remove previous markers
-        if (chart.getSeriesMap().containsKey("marker")) {
-            chart.removeSeries("marker");
-        }
-
-        // Add a vertical line at the specified frameId
+        // Use updateXYSeries for better performance than remove/add
         double[] xData = new double[]{frameId, frameId};
         double[] yData = new double[]{0, 1}; // From bottom to top of the plot
 
-        XYSeries markerSeries = chart.addSeries("marker", xData, yData);
-        markerSeries.setXYSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
-        markerSeries.setLineColor(Color.RED);
-        markerSeries.setLineWidth(2);
-        markerSeries.setMarker(new None());
+        if (chart.getSeriesMap().containsKey(MARKER_SERIES_NAME)) {
+            chart.updateXYSeries(MARKER_SERIES_NAME, xData, yData, null);
+        } else {
+            XYSeries markerSeries = chart.addSeries(MARKER_SERIES_NAME, xData, yData);
+            markerSeries.setXYSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
+            markerSeries.setLineColor(Color.RED);
+            markerSeries.setLineWidth(2);
+            markerSeries.setMarker(new None());
+            markerSeries.setShowInLegend(false); // Hide "marker" from the legend
+        }
     }
 }

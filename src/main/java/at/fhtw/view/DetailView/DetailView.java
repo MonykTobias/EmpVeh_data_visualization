@@ -2,6 +2,7 @@ package at.fhtw.view.DetailView;
 
 import at.fhtw.model.InputData;
 import at.fhtw.model.InputTable;
+import at.fhtw.view.DetailView.components.MultiLinePlot;
 import at.fhtw.view.View;
 import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
@@ -9,16 +10,28 @@ import org.knowm.xchart.XYChart;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.function.BiConsumer;
 
-public class DetailView implements View {
-    private final String FOLDERPATH = "data/in/Dataset1/simulator_export";
+public class DetailView implements View{
+    private final String FOLDERPATH;
     private final String TITLESTRING = "Bildanzeige";
     private int currentId = 0;
     private final InputTable data;
+
+    // Fields for data panel labels
+    private JLabel idValueLabel;
+    private JLabel expressionBestValueLabel;
+    private JLabel expressionBestConfidenceValueLabel;
+    private JLabel neutralConfidenceValueLabel;
+    private JLabel happyConfidenceValueLabel;
+    private JLabel surpriseConfidenceValueLabel;
+    private JLabel angerConfidenceValueLabel;
 
     private JPanel dataPanel;
     private ImagePanel imagePanel;
@@ -31,8 +44,9 @@ public class DetailView implements View {
     private Timer playbackTimer;
     private int playBackSpeed = 15;
 
-    public DetailView(InputTable data){
+    public DetailView(InputTable data, String folderPath){
         this.data = data;
+        this.FOLDERPATH = folderPath;
     }
 
     private static class ImagePanel extends JPanel {
@@ -79,50 +93,115 @@ public class DetailView implements View {
     }
 
     @Override
-    public void load(JFrame frame) {
-        frame.setLayout(new GridBagLayout());
+    public JComponent load() {
+        JComponent component = new JComponent() {
+            @Override
+            public void setInheritsPopupMenu(boolean value) {
+                super.setInheritsPopupMenu(value);
+            }
+        };
+        component.setLayout(new GridBagLayout());
 
+        /*
+        * ############################
+        * IMAGE PANEL
+        * ############################
+        * */
         imagePanel = new ImagePanel("Picture Area", Color.decode("#4CAF50"));
         imagePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
-
+        // Setup Grid setup for Data Panel
         GridBagConstraints gbcPicture = new GridBagConstraints();
         gbcPicture.fill = GridBagConstraints.BOTH;
         gbcPicture.gridx = 0;
         gbcPicture.gridy = 0;
-        gbcPicture.weightx = 0.66;
-        gbcPicture.weighty = 0.5;
-        frame.add(imagePanel, gbcPicture);
+        gbcPicture.weightx = 0.8;
+        gbcPicture.weighty = 1;
+        component.add(imagePanel, gbcPicture);
 
+        /*
+         * ############################
+         * DATA PANEL
+         * ############################
+         * */
         dataPanel = createColoredPanel("Information Panel", Color.decode("#2196F3"));
+        setupDataPanel();
+        // Setup Grid setup for Data Panel
         GridBagConstraints gbcInfo = new GridBagConstraints();
-        gbcInfo.fill = GridBagConstraints.BOTH;
+        gbcInfo.fill = GridBagConstraints.CENTER;
         gbcInfo.gridx = 1;
         gbcInfo.gridy = 0;
-        gbcInfo.weightx = 0.34;
-        gbcInfo.weighty = 0.5;
-        frame.add(dataPanel, gbcInfo);
+        gbcInfo.weightx = 0.2;
+        gbcInfo.weighty = 1;
+        component.add(dataPanel, gbcInfo);
 
+        /*
+         * ############################
+         * BOTTOM PANEL (INITIALIZATION)
+         * ############################
+         * */
         JPanel bottomPanel = new JPanel(new GridBagLayout());
 
+        /*
+         * ############################
+         * PLOT PANEL (IN BOTTOM PANEL)
+         * ############################
+         * */
+        // Setup Plot Panel included in bottom Panel
         this.plotter = new MultiLinePlot(this.data);
         plotPanel = new XChartPanel<XYChart>(this.plotter.getChart());
+
+        // Setup Mouse Listener on Plot Panel to jump to ids by clicking
+        plotPanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                // Get the chart object from the plotter
+                XYChart chart = plotter.getChart();
+
+                // Convert the screen's X-coordinate to a value on the chart's X-axis
+                double xValue = chart.getChartXFromCoordinate(e.getX());
+
+                // Round the value to the nearest whole number to get the frame ID
+                int newId = (int) Math.round(xValue);
+
+                // Ensure the calculated ID is within the valid range of our data
+                int maxId = data.getInputTable().size() - 1;
+                if (newId >= 0 && newId <= maxId) {
+                    // Update the current ID and reload the entire view
+                    currentId = newId;
+                    reload();
+                }
+            }
+        });
+
+        // Setup Grid setup for Plot Panel
         GridBagConstraints gbcPlot = new GridBagConstraints();
         gbcPlot.fill = GridBagConstraints.BOTH;
         gbcPlot.gridx = 0;
         gbcPlot.gridy = 0;
         gbcPlot.weightx = 1.00;
-        gbcPlot.weighty = 0.8;
+        gbcPlot.weighty = 0.9;
         bottomPanel.add(plotPanel, gbcPlot);
 
-        controlPanel = createControlPanel(frame);
+        /*
+         * ############################
+         * CONTROL PANEL (IN BOTTOM PANEL)
+         * ############################
+         * */
+        controlPanel = createControlPanel(component);
+        // Setup Grid setup for Control Panel
         GridBagConstraints gbcControl = new GridBagConstraints();
         gbcControl.fill = GridBagConstraints.BOTH;
         gbcControl.gridx = 0;
         gbcControl.gridy = 1;
         gbcControl.weightx = 1.0;
-        gbcControl.weighty = 0.2;
+        gbcControl.weighty = 0.1;
         bottomPanel.add(controlPanel, gbcControl);
 
+        /*
+         * ############################
+         * BOTTOM PANEL (SETUP)
+         * ############################
+         * */
         GridBagConstraints gbcBottom = new GridBagConstraints();
         gbcBottom.fill = GridBagConstraints.BOTH;
         gbcBottom.gridx = 0;
@@ -130,10 +209,71 @@ public class DetailView implements View {
         gbcBottom.gridwidth = 2;
         gbcBottom.weightx = 1.0;
         gbcBottom.weighty = 0.5;
-        frame.add(bottomPanel, gbcBottom);
+        component.add(bottomPanel, gbcBottom);
+
+        reload();
+        return component;
     }
 
-    private JPanel createControlPanel(Frame frame) {
+    // Setup the DataPanel
+    private void setupDataPanel() {
+        dataPanel.removeAll(); // Clear the initial "Information Panel" text
+        dataPanel.setLayout(new GridBagLayout());
+        dataPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(2, 5, 2, 5);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        // A small lambda to reduce repetitive code for adding label pairs.
+        BiConsumer<String, JLabel> addRow = (labelText, valueLabel) -> {
+            gbc.gridx = 0;
+            gbc.weightx = 0.0; // Label column should not expand
+            gbc.fill = GridBagConstraints.NONE;
+            dataPanel.add(new JLabel(labelText), gbc);
+
+            gbc.gridx = 1;
+            gbc.weightx = 1.0; // Value column should take up remaining space
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            dataPanel.add(valueLabel, gbc);
+
+            gbc.gridy++; // Move to the next row
+        };
+
+        // Initialize and add all labels
+        gbc.gridy = 0;
+        idValueLabel = new JLabel("-");
+        addRow.accept("ID:", idValueLabel);
+
+        expressionBestValueLabel = new JLabel("-");
+        addRow.accept("Best Expression:", expressionBestValueLabel);
+
+        expressionBestConfidenceValueLabel = new JLabel("-");
+        addRow.accept("Confidence:", expressionBestConfidenceValueLabel);
+
+        // Add a visual separator
+        //gbc.gridx = 0;
+        //gbc.gridwidth = 2;
+        //gbc.fill = GridBagConstraints.HORIZONTAL;
+        //dataPanel.add(new JSeparator(), gbc);
+        //gbc.gridy++;
+        //gbc.gridwidth = 1; // Reset gridwidth
+
+        // --- Add individual confidence labels ---
+        neutralConfidenceValueLabel = new JLabel("-");
+        addRow.accept("Neutral:", neutralConfidenceValueLabel);
+
+        happyConfidenceValueLabel = new JLabel("-");
+        addRow.accept("Happy:", happyConfidenceValueLabel);
+
+        surpriseConfidenceValueLabel = new JLabel("-");
+        addRow.accept("Surprise:", surpriseConfidenceValueLabel);
+
+        angerConfidenceValueLabel = new JLabel("-");
+        addRow.accept("Anger:", angerConfidenceValueLabel);
+    }
+
+    private JPanel createControlPanel(Component frame) {
         JPanel panel = new JPanel();
         panel.setBackground(Color.decode("#9E9E9E"));
         panel.setBorder(BorderFactory.createLineBorder(Color.BLACK,2));
@@ -143,7 +283,7 @@ public class DetailView implements View {
         label.setForeground(Color.WHITE);
         panel.add(label);
 
-        JTextField idField = new JTextField("0",8);
+        JTextField idField = new JTextField("Id",8);
         JButton loadButton = new JButton("Load Frame");
         loadButton.addActionListener(e -> {
             try{
@@ -178,7 +318,7 @@ public class DetailView implements View {
         });
 
         // Adjust speed of playback
-        JTextField playbackSpeed = new JTextField(this.playBackSpeed + "",8);
+        JTextField playbackSpeed = new JTextField("Speed",8);
         JButton adjustSpeed = new JButton("adjust Speed");
         adjustSpeed.addActionListener(e -> {
             try{
@@ -217,14 +357,12 @@ public class DetailView implements View {
         }
         this.playbackMode = true;
 
-        // 15 frames per second -> 1000ms / 15fps ≈ 67ms delay between frames
         int delay = 1000 / this.playBackSpeed;
         playbackTimer = new Timer(delay, e -> {
             if (currentId < data.getInputTable().size() - 1) {
                 currentId++;
                 reload();
             } else {
-                // Reached the end, stop playback
                 pausePlaybackMode();
             }
         });
@@ -258,45 +396,26 @@ public class DetailView implements View {
     }
 
     @Override
-    public void close() {
-
-    }
-
-    @Override
     public String getTitle() {
         return this.TITLESTRING;
     }
 
+    // Load Data given by currentId
     private void loadData() {
+        if (currentId < 0 || currentId >= data.getInputTable().size()) return;
+
         InputData inputData = this.data.getInputTable().get(currentId);
-
-        dataPanel.removeAll();
-        dataPanel.setLayout(new GridLayout(0,1,5,5));
-
         DecimalFormat df = new DecimalFormat("0.000");
 
-        dataPanel.add(new JLabel("id:" + inputData.getId()));
+        // Update the text of the labels.
+        idValueLabel.setText(String.valueOf(inputData.getId()));
+        expressionBestValueLabel.setText(inputData.getExpression_best().name());
+        expressionBestConfidenceValueLabel.setText(df.format(inputData.getExpression_best_confidence()));
 
-        String expressionLabelText = inputData.getExpression_best().name();
-        dataPanel.add(new JLabel("expression_best" + expressionLabelText));
-
-        dataPanel.add(new JLabel("expression_best_confidence"
-                + df.format(inputData.getExpression_best_confidence())));
-
-        dataPanel.add(new JLabel("expression_neutral_confidence"
-                + df.format(inputData.getExpression_neutral_confidence())));
-
-        dataPanel.add(new JLabel("expression_happy_confidence"
-                + df.format(inputData.getExpression_happy_confidence())));
-
-        dataPanel.add(new JLabel("expression_surprise_confidence"
-                + df.format(inputData.getExpression_surprise_confidence())));
-
-        dataPanel.add(new JLabel("expression_anger_confidence"
-                + df.format(inputData.getExpression_anger_confidence())));
-
-        dataPanel.revalidate();
-        dataPanel.repaint();
+        neutralConfidenceValueLabel.setText(df.format(inputData.getExpression_neutral_confidence()));
+        happyConfidenceValueLabel.setText(df.format(inputData.getExpression_happy_confidence()));
+        surpriseConfidenceValueLabel.setText(df.format(inputData.getExpression_surprise_confidence()));
+        angerConfidenceValueLabel.setText(df.format(inputData.getExpression_anger_confidence()));
     }
 
     private void loadPicture() {
