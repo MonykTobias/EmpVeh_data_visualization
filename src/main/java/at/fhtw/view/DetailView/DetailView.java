@@ -100,23 +100,15 @@ public class DetailView implements View{
                 super.setInheritsPopupMenu(value);
             }
         };
-        component.setLayout(new GridBagLayout());
+        component.setLayout(new BorderLayout());
 
         /*
-        * ############################
-        * IMAGE PANEL
-        * ############################
-        * */
+         * ############################
+         * IMAGE PANEL
+         * ############################
+         * */
         imagePanel = new ImagePanel("Picture Area", Color.decode("#4CAF50"));
         imagePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
-        // Setup Grid setup for Data Panel
-        GridBagConstraints gbcPicture = new GridBagConstraints();
-        gbcPicture.fill = GridBagConstraints.BOTH;
-        gbcPicture.gridx = 0;
-        gbcPicture.gridy = 0;
-        gbcPicture.weightx = 0.8;
-        gbcPicture.weighty = 1;
-        component.add(imagePanel, gbcPicture);
 
         /*
          * ############################
@@ -125,91 +117,73 @@ public class DetailView implements View{
          * */
         dataPanel = createColoredPanel("Information Panel", Color.decode("#2196F3"));
         setupDataPanel();
-        // Setup Grid setup for Data Panel
-        GridBagConstraints gbcInfo = new GridBagConstraints();
-        gbcInfo.fill = GridBagConstraints.CENTER;
-        gbcInfo.gridx = 1;
-        gbcInfo.gridy = 0;
-        gbcInfo.weightx = 0.2;
-        gbcInfo.weighty = 1;
-        component.add(dataPanel, gbcInfo);
 
         /*
          * ############################
-         * BOTTOM PANEL (INITIALIZATION)
+         * HORIZONTAL SPLIT PANE
+         * ############################
+         * */
+        JSplitPane horizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, imagePanel, dataPanel);
+        horizontalSplitPane.setResizeWeight(0.8);
+        horizontalSplitPane.setBorder(null);
+
+        /*
+         * ############################
+         * BOTTOM PANEL (PLOT AND CONTROLS)
          * ############################
          * */
         JPanel bottomPanel = new JPanel(new GridBagLayout());
 
-        /*
-         * ############################
-         * PLOT PANEL (IN BOTTOM PANEL)
-         * ############################
-         * */
-        // Setup Plot Panel included in bottom Panel
+        // Plot Panel
         this.plotter = new MultiLinePlot(this.data);
-        plotPanel = new XChartPanel<XYChart>(this.plotter.getChart());
-
-        // Setup Mouse Listener on Plot Panel to jump to ids by clicking
+        plotPanel = new XChartPanel<>(this.plotter.getChart());
         plotPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                // Get the chart object from the plotter
                 XYChart chart = plotter.getChart();
-
-                // Convert the screen's X-coordinate to a value on the chart's X-axis
                 double xValue = chart.getChartXFromCoordinate(e.getX());
-
-                // Round the value to the nearest whole number to get the frame ID
                 int newId = (int) Math.round(xValue);
-
-                // Ensure the calculated ID is within the valid range of our data
                 int maxId = data.getInputTable().size() - 1;
                 if (newId >= 0 && newId <= maxId) {
-                    // Update the current ID and reload the entire view
                     currentId = newId;
                     reload();
                 }
             }
         });
-
-        // Setup Grid setup for Plot Panel
         GridBagConstraints gbcPlot = new GridBagConstraints();
         gbcPlot.fill = GridBagConstraints.BOTH;
         gbcPlot.gridx = 0;
         gbcPlot.gridy = 0;
-        gbcPlot.weightx = 1.00;
-        gbcPlot.weighty = 0.9;
+        gbcPlot.weightx = 1.0;
+        gbcPlot.weighty = 1.0; // Plot takes available space in its container
         bottomPanel.add(plotPanel, gbcPlot);
 
-        /*
-         * ############################
-         * CONTROL PANEL (IN BOTTOM PANEL)
-         * ############################
-         * */
+        // Control Panel
         controlPanel = createControlPanel(component);
-        // Setup Grid setup for Control Panel
         GridBagConstraints gbcControl = new GridBagConstraints();
-        gbcControl.fill = GridBagConstraints.BOTH;
+        gbcControl.fill = GridBagConstraints.HORIZONTAL;
         gbcControl.gridx = 0;
         gbcControl.gridy = 1;
         gbcControl.weightx = 1.0;
-        gbcControl.weighty = 0.1;
+        gbcControl.weighty = 0; // Control panel should not grow vertically
         bottomPanel.add(controlPanel, gbcControl);
 
         /*
          * ############################
-         * BOTTOM PANEL (SETUP)
+         * SPLIT PANE
          * ############################
          * */
-        GridBagConstraints gbcBottom = new GridBagConstraints();
-        gbcBottom.fill = GridBagConstraints.BOTH;
-        gbcBottom.gridx = 0;
-        gbcBottom.gridy = 1;
-        gbcBottom.gridwidth = 2;
-        gbcBottom.weightx = 1.0;
-        gbcBottom.weighty = 0.5;
-        component.add(bottomPanel, gbcBottom);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, horizontalSplitPane, bottomPanel);
+        splitPane.setResizeWeight(0.8); // Give 80% of the extra space to the top panel
+
+        component.add(splitPane, BorderLayout.CENTER);
+
+        // Set the initial divider location after the component is realized.
+        // Using invokeLater to ensure that the component has been laid out and has a size.
+        SwingUtilities.invokeLater(() -> {
+            splitPane.setDividerLocation(0.8);
+            horizontalSplitPane.setDividerLocation(0.8);
+        });
 
         reload();
         return component;
