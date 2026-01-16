@@ -2,8 +2,13 @@ package at.fhtw.view.DetailView;
 
 import at.fhtw.model.InputData;
 import at.fhtw.model.InputTable;
-import at.fhtw.view.DetailView.components.MultiLinePlot;
+import at.fhtw.view.DetailView.components.ImagePanel;
+import at.fhtw.view.DetailView.components.buttons.Buttons;
+import at.fhtw.view.DetailView.components.plots.MultiLinePlot;
+import at.fhtw.view.DetailView.components.plots.IPlot;
 import at.fhtw.view.View;
+import lombok.Getter;
+import lombok.Setter;
 import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
 
@@ -22,6 +27,7 @@ public class DetailView implements View{
     private final String FOLDERPATH;
     private final String TITLESTRING = "Bildanzeige";
     private int currentId = 0;
+    @Getter
     private final InputTable data;
 
     // Fields for data panel labels
@@ -37,7 +43,9 @@ public class DetailView implements View{
     private ImagePanel imagePanel;
     private JPanel controlPanel;
     private JPanel plotPanel;
-    private MultiLinePlot plotter;
+    @Setter
+    private IPlot plotter;
+    private JPanel bottomPanel;
 
     // SETTINGS
     private boolean playbackMode = false;
@@ -47,49 +55,6 @@ public class DetailView implements View{
     public DetailView(InputTable data, String folderPath){
         this.data = data;
         this.FOLDERPATH = folderPath;
-    }
-
-    private static class ImagePanel extends JPanel {
-        private BufferedImage image;
-        private String initialText;
-
-        public ImagePanel(String initialText, Color color) {
-            this.initialText = initialText;
-            this.setBackground(color);
-        }
-
-        public void setImage(BufferedImage newImage) {
-            this.image = newImage;
-            this.initialText = null;
-            repaint();
-        }
-
-        public void setErrorText(String text) {
-            this.image = null;
-            this.initialText = text;
-            repaint();
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2d = (Graphics2D) g;
-
-            int w = getWidth();
-            int h = getHeight();
-
-            if (image != null) {
-                g2d.drawImage(image, 0, 0, w, h, this);
-            } else if (initialText != null) {
-                g2d.setColor(Color.WHITE);
-                g2d.setFont(new Font("Arial", Font.BOLD, 18));
-
-                FontMetrics fm = g2d.getFontMetrics();
-                int x = (w - fm.stringWidth(initialText)) / 2;
-                int y = ((h - fm.getHeight()) / 2) + fm.getAscent();
-                g2d.drawString(initialText, x, y);
-            }
-        }
     }
 
     @Override
@@ -132,31 +97,11 @@ public class DetailView implements View{
          * BOTTOM PANEL (PLOT AND CONTROLS)
          * ############################
          * */
-        JPanel bottomPanel = new JPanel(new GridBagLayout());
+        bottomPanel = new JPanel(new GridBagLayout());
 
         // Plot Panel
         this.plotter = new MultiLinePlot(this.data);
-        plotPanel = new XChartPanel<>(this.plotter.getChart());
-        plotPanel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                XYChart chart = plotter.getChart();
-                double xValue = chart.getChartXFromCoordinate(e.getX());
-                int newId = (int) Math.round(xValue);
-                int maxId = data.getInputTable().size() - 1;
-                if (newId >= 0 && newId <= maxId) {
-                    currentId = newId;
-                    reload();
-                }
-            }
-        });
-        GridBagConstraints gbcPlot = new GridBagConstraints();
-        gbcPlot.fill = GridBagConstraints.BOTH;
-        gbcPlot.gridx = 0;
-        gbcPlot.gridy = 0;
-        gbcPlot.weightx = 1.0;
-        gbcPlot.weighty = 1.0; // Plot takes available space in its container
-        bottomPanel.add(plotPanel, gbcPlot);
+        setupPlotPanel();
 
         // Control Panel
         controlPanel = createControlPanel(component);
@@ -187,6 +132,36 @@ public class DetailView implements View{
 
         reload();
         return component;
+    }
+
+    private void setupPlotPanel() {
+        if (plotPanel != null) {
+            bottomPanel.remove(plotPanel);
+        }
+        // Mouse click on plot triggers change of frame
+        XYChart chart = this.plotter.getChart();
+        plotPanel = new XChartPanel<>(chart);
+        plotPanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                double xValue = chart.getChartXFromCoordinate(e.getX());
+                int newId = (int) Math.round(xValue);
+                int maxId = data.getInputTable().size() - 1;
+                if (newId >= 0 && newId <= maxId) {
+                    currentId = newId;
+                    reload();
+                }
+            }
+        });
+        GridBagConstraints gbcPlot = new GridBagConstraints();
+        gbcPlot.fill = GridBagConstraints.BOTH;
+        gbcPlot.gridx = 0;
+        gbcPlot.gridy = 0;
+        gbcPlot.weightx = 1.0;
+        gbcPlot.weighty = 1.0; // Plot takes available space in its container
+        bottomPanel.add(plotPanel, gbcPlot);
+        bottomPanel.revalidate();
+        bottomPanel.repaint();
     }
 
     // Setup the DataPanel
@@ -314,6 +289,9 @@ public class DetailView implements View{
             }
         });
 
+        // Plot selection Button
+        JButton selectPlot = Buttons.selectPlot(this);
+
         panel.add(idField);
         panel.add(loadButton);
         panel.add(playbackSpeed);
@@ -321,6 +299,7 @@ public class DetailView implements View{
         panel.add(prev);
         panel.add(play);
         panel.add(next);
+        panel.add(selectPlot);
 
         return panel;
     }
@@ -431,5 +410,10 @@ public class DetailView implements View{
             imagePanel.setErrorText("Error loading image: " + e.getMessage());
             imagePanel.repaint();
         }
+    }
+
+    public void refreshPlotLayout() {
+        setupPlotPanel();
+        reload();
     }
 }
