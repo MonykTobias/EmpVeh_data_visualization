@@ -3,7 +3,6 @@ package at.fhtw.view.DetailView.components.buttons;
 import at.fhtw.view.DetailView.DetailView;
 import at.fhtw.view.DetailView.components.plots.MultiLinePlot;
 import at.fhtw.view.DetailView.components.plots.StackedPlot;
-import at.fhtw.view.DetailView.components.plots.StackedPlot;
 
 import javax.swing.*;
 

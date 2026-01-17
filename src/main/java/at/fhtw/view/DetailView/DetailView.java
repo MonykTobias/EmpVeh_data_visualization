@@ -25,7 +25,6 @@ import java.util.function.BiConsumer;
 
 public class DetailView implements View{
     private final String FOLDERPATH;
-    private final String TITLESTRING = "Bildanzeige";
     private int currentId = 0;
     @Getter
     private final InputTable data;
@@ -41,7 +40,6 @@ public class DetailView implements View{
 
     private JPanel dataPanel;
     private ImagePanel imagePanel;
-    private JPanel controlPanel;
     private JPanel plotPanel;
     @Setter
     private IPlot plotter;
@@ -104,7 +102,7 @@ public class DetailView implements View{
         setupPlotPanel();
 
         // Control Panel
-        controlPanel = createControlPanel(component);
+        JPanel controlPanel = createControlPanel(component);
         GridBagConstraints gbcControl = new GridBagConstraints();
         gbcControl.fill = GridBagConstraints.HORIZONTAL;
         gbcControl.gridx = 0;
@@ -350,7 +348,8 @@ public class DetailView implements View{
 
     @Override
     public String getTitle() {
-        return this.TITLESTRING;
+        String TITLESTRING = "Bildanzeige";
+        return TITLESTRING;
     }
 
     // Load Data given by currentId
