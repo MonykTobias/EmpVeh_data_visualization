@@ -1,6 +1,9 @@
 package at.fhtw.controller;
 
-import at.fhtw.model.InputTable;
+import at.fhtw.model.InputData;
+import at.fhtw.model.InputDataTable;
+import at.fhtw.model.Validation;
+import at.fhtw.model.ValidationTable;
 import at.fhtw.model.helpers.CsvConverter;
 import at.fhtw.view.DetailView.DetailView;
 import at.fhtw.view.View;
@@ -19,6 +22,7 @@ public class Controller {
     private JTextField folderPathField;
     private JTextField csvPathField;
     private JButton loadDataButton;
+    private JButton saveButton;
 
     public Controller() {
         // Constructor can be used for initialization if needed
@@ -37,6 +41,7 @@ public class Controller {
         JButton browseFolderButton = new JButton("Browse Folder");
         JButton browseCsvButton = new JButton("Browse CSV");
         loadDataButton = new JButton("Load Data");
+        saveButton = new JButton("Save Validation");
 
         topPanel.add(new JLabel("Image Folder:"));
         topPanel.add(folderPathField);
@@ -45,6 +50,7 @@ public class Controller {
         topPanel.add(csvPathField);
         topPanel.add(browseCsvButton);
         topPanel.add(loadDataButton);
+        topPanel.add(saveButton);
 
         mainFrame.add(topPanel, BorderLayout.NORTH);
 
@@ -63,12 +69,15 @@ public class Controller {
             onDataSelected(folderPath, csvPath);
         });
 
+        saveButton.addActionListener(e -> saveValidation());
+
         // Add listeners to text fields to validate paths on change
         folderPathField.getDocument().addDocumentListener((SimpleDocumentListener) e -> validatePaths());
         csvPathField.getDocument().addDocumentListener((SimpleDocumentListener) e -> validatePaths());
 
-        // Initially, the button is disabled
+        // Initially, the buttons are disabled
         loadDataButton.setEnabled(false);
+        saveButton.setEnabled(false);
 
         mainFrame.setLocationRelativeTo(null);
         mainFrame.setVisible(true);
@@ -101,6 +110,24 @@ public class Controller {
         boolean isCsvValid = csv.exists() && csv.isFile() && csvPath.toLowerCase().endsWith(".csv");
 
         loadDataButton.setEnabled(isFolderValid && isCsvValid);
+        saveButton.setEnabled(currentView instanceof DetailView);
+    }
+
+    private void saveValidation() {
+        if (currentView instanceof DetailView) {
+            DetailView detailView = (DetailView) currentView;
+            String csvPath = csvPathField.getText();
+            String validationCsvPath = csvPath.substring(0, csvPath.lastIndexOf(File.separator)) + File.separator + "validation.csv";
+            try {
+                CsvConverter<ValidationTable> converter = new CsvConverter<>(ValidationTable.class);
+                String content = converter.serialize(detailView.getValidationTable());
+                Files.writeString(Paths.get(validationCsvPath), content);
+                JOptionPane.showMessageDialog(mainFrame, "Validation saved successfully!");
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(mainFrame, "Error saving validation: " + ex.getMessage());
+            }
+        }
     }
 
     // when successfully selected a valid path replace current view with DetailView
@@ -110,16 +137,45 @@ public class Controller {
         System.out.println("CSV: " + csvPath);
         // get Data
         try{
+            // get Input Table
             String csvContent = Files.readString(Paths.get(csvPath));
-            CsvConverter<InputTable> csvConverter = new CsvConverter<>(InputTable.class);
-            InputTable table = csvConverter.deserialize(csvContent);
-            System.out.println("Loaded rows: " + table.getInputTable().size());
-
+            CsvConverter<InputDataTable> csvConverter = new CsvConverter<>(InputDataTable.class);
+            InputDataTable table = csvConverter.deserialize(csvContent);
+            System.out.println("Input Table: Loaded rows: " + table.getInputTable().size());
+            
+            // get Validation Table (Same folder as Input Table)
+            String validationCsvPath = csvPath.substring(0, csvPath.lastIndexOf(File.separator)) + File.separator + "validation.csv";
+            File validationFile = new File(validationCsvPath);
+            ValidationTable validationTable;
+            CsvConverter<ValidationTable> validationTableCsvConverter = new CsvConverter<>(ValidationTable.class);
+            
+            if (validationFile.exists()) {
+                csvContent = Files.readString(Paths.get(validationCsvPath));
+                validationTable = validationTableCsvConverter.deserialize(csvContent);
+                System.out.println("Validation Table: Loaded rows: " + validationTable.getValidationTable().size());
+            } else {
+                System.out.println("Validation Table not found. Creating a new one.");
+                validationTable = new ValidationTable();
+                
+                // Initialize validation table with default values for all frames
+                for (InputData inputData : table.getInputTable()) {
+                    Validation validation = new Validation(inputData);
+                    validationTable.getValidationTable().put(inputData.getId(), validation);
+                }
+                
+                // Save the new initialized table to the file
+                String serializedTable = validationTableCsvConverter.serialize(validationTable);
+                Files.writeString(Paths.get(validationCsvPath), serializedTable);
+                System.out.println("Created new validation.csv at: " + validationCsvPath);
+            }
+            
             if(!table.getInputTable().isEmpty()){
-                replaceView(new DetailView(table, folderPath));
+                replaceView(new DetailView(table, validationTable, folderPath));
+                saveButton.setEnabled(true);
             }
         }catch(IOException e){
             JOptionPane.showMessageDialog(mainFrame, "Error when loading this Path.");
+            e.printStackTrace();
             return;
         }
         // Output if successful

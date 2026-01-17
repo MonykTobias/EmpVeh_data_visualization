@@ -1,29 +1,29 @@
-package at.fhtw.view.DetailView.components;
+package at.fhtw.view.DetailView.components.plots;
 
 import at.fhtw.model.InputData;
-import at.fhtw.model.InputTable;
+import at.fhtw.model.InputDataTable;
 import lombok.Getter;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.style.Styler;
-import org.knowm.xchart.style.markers.None;
 
-import java.awt.*;
 import java.util.List;
 import java.util.stream.IntStream;
 
 @Getter
-public class MultiLinePlot {
-    private final XYChart chart;
-    private static final String MARKER_SERIES_NAME = "marker";
+public class MultiLinePlot extends Plot {
 
-    public MultiLinePlot(InputTable table) {
-        this.chart = createChart(table);
+    public MultiLinePlot(InputDataTable table) {
+        super(table);
     }
 
-    private XYChart createChart(InputTable table) {
-        final XYChart chart = new XYChartBuilder()
+    /*
+    * This function creates, saves and returns a chart
+    * */
+    @Override
+    public XYChart getChart() {
+        this.chart = new XYChartBuilder()
                 .build();
 
         // Customize Chart
@@ -34,7 +34,7 @@ public class MultiLinePlot {
         chart.getStyler().setYAxisMax(1.0);
 
         // Return empty chart if there is no data
-        List<InputData> data = table.getInputTable();
+        List<InputData> data = this.inputTable.getInputTable();
         if (data == null || data.isEmpty()) {
             return chart;
         }
@@ -65,23 +65,5 @@ public class MultiLinePlot {
         chart.addSeries("anger", frameData, angerData);
 
         return chart;
-    }
-
-
-    public void setMarker(int frameId) {
-        // Use updateXYSeries for better performance than remove/add
-        double[] xData = new double[]{frameId, frameId};
-        double[] yData = new double[]{0, 1}; // From bottom to top of the plot
-
-        if (chart.getSeriesMap().containsKey(MARKER_SERIES_NAME)) {
-            chart.updateXYSeries(MARKER_SERIES_NAME, xData, yData, null);
-        } else {
-            XYSeries markerSeries = chart.addSeries(MARKER_SERIES_NAME, xData, yData);
-            markerSeries.setXYSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Line);
-            markerSeries.setLineColor(Color.RED);
-            markerSeries.setLineWidth(2);
-            markerSeries.setMarker(new None());
-            markerSeries.setShowInLegend(false); // Hide "marker" from the legend
-        }
     }
 }

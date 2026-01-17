@@ -10,6 +10,6 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class InputTable implements Serializable {
+public class InputDataTable implements Serializable {
     private List<InputData> inputTable;
 }
