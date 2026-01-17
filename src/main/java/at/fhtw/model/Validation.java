@@ -1,46 +1,32 @@
 package at.fhtw.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Validation {
     private Integer id;
-    private Boolean valid;
+    private Boolean validated; // Renamed from 'valid' to 'validated' to indicate if user has checked it
 
     private Expression realEmotion;
     private String comment;
 
-    // No changes -> just take whatever is in InputData
+    // Default initialization from InputData
     public Validation (InputData data){
         this.id = data.getId();
         this.realEmotion = data.getExpression_best();
-
-        this.valid = true; // no Emotion changes!
+        this.validated = false; // Default to false
+        this.comment = "";
     }
 
-    // No changes -> just take whatever is in InputData + given comment
-    public Validation(InputData data, String comment){
-        this.id = data.getId();
-        this.realEmotion = data.getExpression_best();
-        this.comment = comment;
-
-        this.valid = true; // no Emotion changes!
-    }
-
-    // Other expression (realEmotion) -> save updated Emotion
-    public Validation(InputData data, Expression realEmotion){
-        this.id = data.getId();
-        this.realEmotion = realEmotion;
-
-        this.valid = false; // changed Emotion!
-    }
-
-    // Other expression (realEmotion) -> save updated Emotion + given comment
+    // Constructor for when user validates
     public Validation(InputData data, Expression realEmotion, String comment){
         this.id = data.getId();
         this.realEmotion = realEmotion;
         this.comment = comment;
-
-        this.valid = false; // changed Emotion!
+        this.validated = true; // Set to true when user validates
     }
 }

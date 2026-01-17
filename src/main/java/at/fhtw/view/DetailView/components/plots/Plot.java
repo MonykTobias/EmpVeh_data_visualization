@@ -1,6 +1,6 @@
 package at.fhtw.view.DetailView.components.plots;
 
-import at.fhtw.model.InputTable;
+import at.fhtw.model.InputDataTable;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.style.markers.None;
@@ -8,11 +8,11 @@ import org.knowm.xchart.style.markers.None;
 import java.awt.*;
 
 public abstract class Plot implements IPlot{
-    protected final InputTable inputTable;
+    protected final InputDataTable inputTable;
     protected XYChart chart;
     protected static final String MARKER_SERIES_NAME = "marker";
 
-    protected Plot(InputTable table) {
+    protected Plot(InputDataTable table) {
         this.inputTable = table;
         this.chart = null;
     }

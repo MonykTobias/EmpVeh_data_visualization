@@ -1,7 +1,6 @@
 package at.fhtw.view.DetailView;
 
-import at.fhtw.model.InputData;
-import at.fhtw.model.InputTable;
+import at.fhtw.model.*;
 import at.fhtw.view.DetailView.components.ImagePanel;
 import at.fhtw.view.DetailView.components.buttons.Buttons;
 import at.fhtw.view.DetailView.components.plots.MultiLinePlot;
@@ -27,16 +26,25 @@ public class DetailView implements View{
     private final String FOLDERPATH;
     private int currentId = 0;
     @Getter
-    private final InputTable data;
+    private final InputDataTable data;
+    @Getter
+    private final ValidationTable validationTable;
 
     // Fields for data panel labels
     private JLabel idValueLabel;
+    private JLabel validationStatusLabel;
     private JLabel expressionBestValueLabel;
     private JLabel expressionBestConfidenceValueLabel;
     private JLabel neutralConfidenceValueLabel;
     private JLabel happyConfidenceValueLabel;
     private JLabel surpriseConfidenceValueLabel;
     private JLabel angerConfidenceValueLabel;
+
+    // Validation fields
+    private JComboBox<Expression> validationExpressionComboBox;
+    private JTextField validationCommentField;
+    private JTextField validationToIdField;
+    private JButton validateButton;
 
     private JPanel dataPanel;
     private ImagePanel imagePanel;
@@ -50,9 +58,10 @@ public class DetailView implements View{
     private Timer playbackTimer;
     private int playBackSpeed = 15;
 
-    public DetailView(InputTable data, String folderPath){
+    public DetailView(InputDataTable data, ValidationTable validationTable, String folderPath){
         this.data = data;
         this.FOLDERPATH = folderPath;
+        this.validationTable = validationTable;
     }
 
     @Override
@@ -173,7 +182,7 @@ public class DetailView implements View{
         gbc.anchor = GridBagConstraints.WEST;
 
         // A small lambda to reduce repetitive code for adding label pairs.
-        BiConsumer<String, JLabel> addRow = (labelText, valueLabel) -> {
+        BiConsumer<String, JComponent> addRow = (labelText, valueComponent) -> {
             gbc.gridx = 0;
             gbc.weightx = 0.0; // Label column should not expand
             gbc.fill = GridBagConstraints.NONE;
@@ -182,7 +191,7 @@ public class DetailView implements View{
             gbc.gridx = 1;
             gbc.weightx = 1.0; // Value column should take up remaining space
             gbc.fill = GridBagConstraints.HORIZONTAL;
-            dataPanel.add(valueLabel, gbc);
+            dataPanel.add(valueComponent, gbc);
 
             gbc.gridy++; // Move to the next row
         };
@@ -191,6 +200,10 @@ public class DetailView implements View{
         gbc.gridy = 0;
         idValueLabel = new JLabel("-");
         addRow.accept("ID:", idValueLabel);
+
+        validationStatusLabel = new JLabel("●");
+        validationStatusLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        addRow.accept("Validated:", validationStatusLabel);
 
         expressionBestValueLabel = new JLabel("-");
         addRow.accept("Best Expression:", expressionBestValueLabel);
@@ -218,6 +231,84 @@ public class DetailView implements View{
 
         angerConfidenceValueLabel = new JLabel("-");
         addRow.accept("Anger:", angerConfidenceValueLabel);
+
+        // --- Validation Section ---
+        gbc.gridx = 0;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        dataPanel.add(new JSeparator(), gbc);
+        gbc.gridy++;
+        gbc.gridwidth = 1;
+
+        // Manually add the combo box row to avoid the addRow lambda issue
+        gbc.gridx = 0;
+        gbc.weightx = 0.0;
+        gbc.fill = GridBagConstraints.NONE;
+        dataPanel.add(new JLabel("Real Emotion:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        validationExpressionComboBox = new JComboBox<>(Expression.values());
+        dataPanel.add(validationExpressionComboBox, gbc);
+        gbc.gridy++;
+
+        validationCommentField = new JTextField();
+        addRow.accept("Comment:", validationCommentField);
+
+        validationToIdField = new JTextField();
+        addRow.accept("To ID (opt.):", validationToIdField);
+
+        validateButton = new JButton("Validate Frame(s)");
+        validateButton.addActionListener(e -> validateCurrentFrame());
+        
+        gbc.gridx = 0;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        dataPanel.add(validateButton, gbc);
+        gbc.gridy++;
+    }
+
+    private void validateCurrentFrame() {
+        Expression selectedExpression = (Expression) validationExpressionComboBox.getSelectedItem();
+        String comment = validationCommentField.getText();
+
+        int endId = currentId;
+        String toIdText = validationToIdField.getText();
+        if (toIdText != null && !toIdText.trim().isEmpty()) {
+            try {
+                endId = Integer.parseInt(toIdText.trim());
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(null, "Invalid To ID");
+                return;
+            }
+        }
+
+        if (endId < currentId) {
+            JOptionPane.showMessageDialog(null, "To ID must be >= Current ID");
+            return;
+        }
+
+        int maxId = data.getInputTable().size() - 1;
+        if (endId > maxId) endId = maxId;
+
+        int count = 0;
+        for (int i = currentId; i <= endId; i++) {
+            InputData inputData = this.data.getInputTable().get(i);
+            Validation validation = new Validation(inputData, selectedExpression, comment);
+            validationTable.getValidationTable().put(i, validation);
+            count++;
+        }
+        
+        // Update status label for current frame
+        validationStatusLabel.setForeground(Color.GREEN);
+
+        // Visual feedback
+        if (count == 1) {
+            JOptionPane.showMessageDialog(null, "Validated frame " + currentId);
+        } else {
+            JOptionPane.showMessageDialog(null, "Validated " + count + " frames (" + currentId + " to " + endId + ")");
+        }
     }
 
     private JPanel createControlPanel(Component frame) {
@@ -368,6 +459,25 @@ public class DetailView implements View{
         happyConfidenceValueLabel.setText(df.format(inputData.getExpression_happy_confidence()));
         surpriseConfidenceValueLabel.setText(df.format(inputData.getExpression_surprise_confidence()));
         angerConfidenceValueLabel.setText(df.format(inputData.getExpression_anger_confidence()));
+
+        // Update Validation Fields
+        Validation validation = validationTable.getValidationTable().get(currentId);
+        if (validation != null) {
+            validationExpressionComboBox.setSelectedItem(validation.getRealEmotion());
+            validationCommentField.setText(validation.getComment());
+            
+            if (Boolean.TRUE.equals(validation.getValidated())) {
+                validationStatusLabel.setForeground(Color.GREEN);
+            } else {
+                validationStatusLabel.setForeground(Color.RED);
+            }
+        } else {
+            // Default to current best expression if no validation exists
+            validationExpressionComboBox.setSelectedItem(inputData.getExpression_best());
+            validationCommentField.setText("");
+            validationStatusLabel.setForeground(Color.RED);
+        }
+        validationToIdField.setText("");
     }
 
     private void loadPicture() {

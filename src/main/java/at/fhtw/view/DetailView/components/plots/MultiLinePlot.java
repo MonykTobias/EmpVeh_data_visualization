@@ -1,21 +1,20 @@
 package at.fhtw.view.DetailView.components.plots;
 
 import at.fhtw.model.InputData;
-import at.fhtw.model.InputTable;
+import at.fhtw.model.InputDataTable;
 import lombok.Getter;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.style.Styler;
 
-import java.awt.*;
 import java.util.List;
 import java.util.stream.IntStream;
 
 @Getter
 public class MultiLinePlot extends Plot {
 
-    public MultiLinePlot(InputTable table) {
+    public MultiLinePlot(InputDataTable table) {
         super(table);
     }
 

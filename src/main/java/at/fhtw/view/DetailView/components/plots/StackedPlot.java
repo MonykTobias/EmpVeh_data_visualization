@@ -1,7 +1,7 @@
 package at.fhtw.view.DetailView.components.plots;
 
 import at.fhtw.model.InputData;
-import at.fhtw.model.InputTable;
+import at.fhtw.model.InputDataTable;
 import lombok.Getter;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
@@ -14,7 +14,7 @@ import java.util.stream.IntStream;
 @Getter
 public class StackedPlot extends Plot {
 
-    public StackedPlot(InputTable table) {
+    public StackedPlot(InputDataTable table) {
         super(table);
     }
 
