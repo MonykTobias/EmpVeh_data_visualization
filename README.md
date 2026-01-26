@@ -6,7 +6,7 @@ This project is a Java-based data visualization tool for analyzing emotion recog
 
 *   **Java Development Kit (JDK) 21** or higher.
 *   **Maven** (for building the project).
-*   **Java IDE**.
+*   **Git** for cloning the repository.
 
 ## Installation & Setup
 
