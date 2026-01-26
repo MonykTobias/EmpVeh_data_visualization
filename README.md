@@ -16,13 +16,13 @@ This project is a Java-based data visualization tool for analyzing emotion recog
     cd EmpVeh_data_visualization
     ```
 
-2.  **Build the Project**
+2.  **Build the Project**:
     Use Maven to clean and install dependencies:
     ```bash
     mvn clean install
     ```
 
-3.  **Run the Application**
+3.  **Run the Application**:
     You can run the application directly from your IDE by executing the `main` method in `src/main/java/at/fhtw/Main.java`.
 
     Or via Maven:
