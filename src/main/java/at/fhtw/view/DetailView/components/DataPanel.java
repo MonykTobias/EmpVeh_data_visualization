@@ -6,6 +6,7 @@ import at.fhtw.model.Validation;
 import at.fhtw.view.DetailView.DetailView;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.text.DecimalFormat;
 import java.util.function.BiConsumer;
@@ -32,7 +33,19 @@ public class DataPanel extends JPanel {
     public DataPanel(DetailView detailView) {
         this.detailView = detailView;
         setBackground(Colors.PANEL_BACKGROUND);
-        setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        
+        // Add a titled border for better grouping
+        TitledBorder border = BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(Colors.BORDER, 1),
+            "Frame Information"
+        );
+        border.setTitleColor(Colors.TEXT);
+        border.setTitleFont(new Font("Arial", Font.BOLD, 14));
+        setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createEmptyBorder(10, 10, 10, 10),
+            border
+        ));
+        
         setLayout(new GridBagLayout());
         setupDataPanel();
     }
@@ -40,7 +53,7 @@ public class DataPanel extends JPanel {
     private void setupDataPanel() {
         removeAll();
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(2, 5, 2, 5);
+        gbc.insets = new Insets(4, 10, 4, 10); // Increase spacing
         gbc.anchor = GridBagConstraints.WEST;
 
         BiConsumer<String, JComponent> addRow = (labelText, valueComponent) -> {
@@ -49,12 +62,14 @@ public class DataPanel extends JPanel {
             gbc.fill = GridBagConstraints.NONE;
             JLabel label = new JLabel(labelText);
             label.setForeground(Colors.TEXT);
+            label.setFont(new Font("Arial", Font.BOLD, 12));
             add(label, gbc);
 
             gbc.gridx = 1;
             gbc.weightx = 1.0;
             gbc.fill = GridBagConstraints.HORIZONTAL;
             valueComponent.setForeground(Colors.TEXT);
+            valueComponent.setFont(new Font("Arial", Font.PLAIN, 12));
             add(valueComponent, gbc);
 
             gbc.gridy++;
@@ -74,6 +89,17 @@ public class DataPanel extends JPanel {
         expressionBestConfidenceValueLabel = new JLabel("-");
         addRow.accept("Confidence:", expressionBestConfidenceValueLabel);
 
+        // Separator
+        gbc.gridx = 0;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        JSeparator sep1 = new JSeparator();
+        sep1.setForeground(Colors.BORDER);
+        sep1.setBackground(Colors.PANEL_BACKGROUND);
+        add(sep1, gbc);
+        gbc.gridy++;
+        gbc.gridwidth = 1;
+
         neutralConfidenceValueLabel = new JLabel("-");
         addRow.accept("Neutral:", neutralConfidenceValueLabel);
 
@@ -86,10 +112,26 @@ public class DataPanel extends JPanel {
         angerConfidenceValueLabel = new JLabel("-");
         addRow.accept("Anger:", angerConfidenceValueLabel);
 
+        // Separator
         gbc.gridx = 0;
         gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        add(new JSeparator(), gbc);
+        JSeparator sep2 = new JSeparator();
+        sep2.setForeground(Colors.BORDER);
+        sep2.setBackground(Colors.PANEL_BACKGROUND);
+        add(sep2, gbc);
+        gbc.gridy++;
+        gbc.gridwidth = 1;
+        
+        // Validation Section Title
+        gbc.gridx = 0;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        JLabel validationTitle = new JLabel("Validation");
+        validationTitle.setForeground(Colors.ACCENT);
+        validationTitle.setFont(new Font("Arial", Font.BOLD, 14));
+        validationTitle.setHorizontalAlignment(SwingConstants.CENTER);
+        add(validationTitle, gbc);
         gbc.gridy++;
         gbc.gridwidth = 1;
 
@@ -98,6 +140,7 @@ public class DataPanel extends JPanel {
         gbc.fill = GridBagConstraints.NONE;
         JLabel emotionLabel = new JLabel("Real Emotion:");
         emotionLabel.setForeground(Colors.TEXT);
+        emotionLabel.setFont(new Font("Arial", Font.BOLD, 12));
         add(emotionLabel, gbc);
 
         gbc.gridx = 1;
@@ -105,31 +148,45 @@ public class DataPanel extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         validationExpressionComboBox = new JComboBox<>(Expression.values());
         validationExpressionComboBox.setForeground(Colors.TEXT);
+        validationExpressionComboBox.setBackground(Colors.BACKGROUND);
         add(validationExpressionComboBox, gbc);
         gbc.gridy++;
 
         validationCommentField = new JTextField();
-        validationCommentField.setBackground(Colors.BACKGROUND);
-        validationCommentField.setForeground(Colors.TEXT);
-        validationCommentField.setCaretColor(Colors.TEXT);
+        styleTextField(validationCommentField);
         addRow.accept("Comment:", validationCommentField);
 
         validationToIdField = new JTextField();
-        validationToIdField.setBackground(Colors.BACKGROUND);
-        validationToIdField.setForeground(Colors.TEXT);
-        validationToIdField.setCaretColor(Colors.TEXT);
+        styleTextField(validationToIdField);
         addRow.accept("To ID (opt.):", validationToIdField);
 
         validateButton = new JButton("Validate Frame(s)");
         validateButton.setBackground(Colors.ACCENT);
         validateButton.setForeground(Color.WHITE);
+        validateButton.setFocusPainted(false);
+        validateButton.setFont(new Font("Arial", Font.BOLD, 12));
         validateButton.addActionListener(e -> validateCurrentFrame());
 
         gbc.gridx = 0;
         gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(10, 10, 10, 10); // More space for button
         add(validateButton, gbc);
         gbc.gridy++;
+        
+        // Push everything to the top
+        gbc.weighty = 1.0;
+        add(new JPanel() {{ setBackground(Colors.PANEL_BACKGROUND); }}, gbc);
+    }
+    
+    private void styleTextField(JTextField textField) {
+        textField.setBackground(Colors.BACKGROUND);
+        textField.setForeground(Colors.TEXT);
+        textField.setCaretColor(Colors.TEXT);
+        textField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Colors.BORDER, 1),
+                BorderFactory.createEmptyBorder(4, 4, 4, 4)
+        ));
     }
 
     public void loadData() {
