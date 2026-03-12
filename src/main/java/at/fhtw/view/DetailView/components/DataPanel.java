@@ -31,7 +31,7 @@ public class DataPanel extends JPanel {
 
     public DataPanel(DetailView detailView) {
         this.detailView = detailView;
-        setBackground(Color.decode("#2196F3"));
+        setBackground(Colors.PANEL_BACKGROUND);
         setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
         setLayout(new GridBagLayout());
         setupDataPanel();
@@ -47,11 +47,14 @@ public class DataPanel extends JPanel {
             gbc.gridx = 0;
             gbc.weightx = 0.0;
             gbc.fill = GridBagConstraints.NONE;
-            add(new JLabel(labelText), gbc);
+            JLabel label = new JLabel(labelText);
+            label.setForeground(Colors.TEXT);
+            add(label, gbc);
 
             gbc.gridx = 1;
             gbc.weightx = 1.0;
             gbc.fill = GridBagConstraints.HORIZONTAL;
+            valueComponent.setForeground(Colors.TEXT);
             add(valueComponent, gbc);
 
             gbc.gridy++;
@@ -93,22 +96,33 @@ public class DataPanel extends JPanel {
         gbc.gridx = 0;
         gbc.weightx = 0.0;
         gbc.fill = GridBagConstraints.NONE;
-        add(new JLabel("Real Emotion:"), gbc);
+        JLabel emotionLabel = new JLabel("Real Emotion:");
+        emotionLabel.setForeground(Colors.TEXT);
+        add(emotionLabel, gbc);
 
         gbc.gridx = 1;
         gbc.weightx = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         validationExpressionComboBox = new JComboBox<>(Expression.values());
+        validationExpressionComboBox.setForeground(Colors.TEXT);
         add(validationExpressionComboBox, gbc);
         gbc.gridy++;
 
         validationCommentField = new JTextField();
+        validationCommentField.setBackground(Colors.BACKGROUND);
+        validationCommentField.setForeground(Colors.TEXT);
+        validationCommentField.setCaretColor(Colors.TEXT);
         addRow.accept("Comment:", validationCommentField);
 
         validationToIdField = new JTextField();
+        validationToIdField.setBackground(Colors.BACKGROUND);
+        validationToIdField.setForeground(Colors.TEXT);
+        validationToIdField.setCaretColor(Colors.TEXT);
         addRow.accept("To ID (opt.):", validationToIdField);
 
         validateButton = new JButton("Validate Frame(s)");
+        validateButton.setBackground(Colors.ACCENT);
+        validateButton.setForeground(Color.WHITE);
         validateButton.addActionListener(e -> validateCurrentFrame());
 
         gbc.gridx = 0;
@@ -140,14 +154,14 @@ public class DataPanel extends JPanel {
             validationCommentField.setText(validation.getComment());
 
             if (Boolean.TRUE.equals(validation.getValidated())) {
-                validationStatusLabel.setForeground(Color.GREEN);
+                validationStatusLabel.setForeground(Colors.SUCCESS);
             } else {
-                validationStatusLabel.setForeground(Color.RED);
+                validationStatusLabel.setForeground(Colors.ERROR);
             }
         } else {
             validationExpressionComboBox.setSelectedItem(inputData.getExpression_best());
             validationCommentField.setText("");
-            validationStatusLabel.setForeground(Color.RED);
+            validationStatusLabel.setForeground(Colors.ERROR);
         }
         validationToIdField.setText("");
     }
@@ -184,7 +198,7 @@ public class DataPanel extends JPanel {
             count++;
         }
 
-        validationStatusLabel.setForeground(Color.GREEN);
+        validationStatusLabel.setForeground(Colors.SUCCESS);
 
         if (count == 1) {
             JOptionPane.showMessageDialog(null, "Validated frame " + currentId);

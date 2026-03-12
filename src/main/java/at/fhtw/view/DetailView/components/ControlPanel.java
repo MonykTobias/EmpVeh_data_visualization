@@ -17,20 +17,22 @@ public class ControlPanel extends JPanel {
 
     public ControlPanel(DetailView detailView) {
         this.detailView = detailView;
-        setBackground(Color.decode("#9E9E9E"));
-        setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
-        setLayout(new FlowLayout(FlowLayout.CENTER, 20, 20));
+        setBackground(Colors.PANEL_BACKGROUND);
+        setBorder(BorderFactory.createLineBorder(Colors.BORDER, 1));
+        setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
         
         initializeComponents();
     }
 
     private void initializeComponents() {
         JLabel label = new JLabel("Control Panel");
-        label.setForeground(Color.WHITE);
+        label.setForeground(Colors.TEXT);
         add(label);
 
         JTextField idField = new JTextField("Id", 8);
+        styleTextField(idField);
         JButton loadButton = new JButton("Load Frame");
+        styleButton(loadButton);
         
         loadButton.addActionListener(e -> {
             try {
@@ -53,6 +55,7 @@ public class ControlPanel extends JPanel {
 
         // Previous Button
         JButton prev = new JButton("<");
+        styleButton(prev);
         prev.addActionListener(e -> {
             if (detailView.getCurrentId() > 0) {
                 detailView.setCurrentId(detailView.getCurrentId() - 1);
@@ -62,6 +65,7 @@ public class ControlPanel extends JPanel {
 
         // Play Button
         JButton play = new JButton("Play/Pause");
+        styleButton(play);
         play.addActionListener(e -> {
             if (this.playbackMode) {
                 pausePlaybackMode();
@@ -72,7 +76,9 @@ public class ControlPanel extends JPanel {
 
         // Adjust speed of playback
         JTextField playbackSpeed = new JTextField("Speed", 8);
+        styleTextField(playbackSpeed);
         JButton adjustSpeed = new JButton("adjust Speed");
+        styleButton(adjustSpeed);
         adjustSpeed.addActionListener(e -> {
             try {
                 String text = playbackSpeed.getText();
@@ -97,6 +103,7 @@ public class ControlPanel extends JPanel {
 
         // Next Button
         JButton next = new JButton(">");
+        styleButton(next);
         next.addActionListener(e -> {
             if (detailView.getCurrentId() < detailView.getData().getInputTable().size() - 1) {
                 detailView.setCurrentId(detailView.getCurrentId() + 1);
@@ -106,6 +113,7 @@ public class ControlPanel extends JPanel {
 
         // Plot selection Button
         JButton selectPlot = Buttons.selectPlot(detailView);
+        styleButton(selectPlot);
 
         add(idField);
         add(loadButton);
@@ -115,6 +123,23 @@ public class ControlPanel extends JPanel {
         add(play);
         add(next);
         add(selectPlot);
+    }
+
+    private void styleButton(JButton button) {
+        button.setBackground(Colors.ACCENT);
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+    }
+
+    private void styleTextField(JTextField textField) {
+        textField.setBackground(Colors.BACKGROUND);
+        textField.setForeground(Colors.TEXT);
+        textField.setCaretColor(Colors.TEXT);
+        textField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Colors.BORDER, 1),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        ));
     }
 
     private void startPlaybackMode() {

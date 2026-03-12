@@ -14,11 +14,11 @@ public class PicturePanel extends JPanel {
     private String initialText;
     private final DetailView detailView;
 
-    public PicturePanel(String initialText, Color color, DetailView detailView) {
+    public PicturePanel(String initialText, DetailView detailView) {
         this.initialText = initialText;
-        this.setBackground(color);
+        this.setBackground(Colors.PANEL_BACKGROUND);
         this.detailView = detailView;
-        this.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+        this.setBorder(BorderFactory.createLineBorder(Colors.BORDER, 1));
     }
 
     public void setImage(BufferedImage newImage) {
@@ -37,19 +37,42 @@ public class PicturePanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
-        int w = getWidth();
-        int h = getHeight();
+        int panelWidth = getWidth();
+        int panelHeight = getHeight();
 
         if (image != null) {
-            g2d.drawImage(image, 0, 0, w, h, this);
+            int imgWidth = image.getWidth();
+            int imgHeight = image.getHeight();
+
+            double imgAspect = (double) imgHeight / imgWidth;
+            double panelAspect = (double) panelHeight / panelWidth;
+
+            int x, y, w, h;
+
+            if (panelAspect > imgAspect) {
+                // Panel is taller than the image, so width is the limiting factor
+                w = panelWidth;
+                h = (int) (w * imgAspect);
+                x = 0;
+                y = (panelHeight - h) / 2;
+            } else {
+                // Panel is wider than the image, so height is the limiting factor
+                h = panelHeight;
+                w = (int) (h / imgAspect);
+                y = 0;
+                x = (panelWidth - w) / 2;
+            }
+
+            g2d.drawImage(image, x, y, w, h, this);
         } else if (initialText != null) {
-            g2d.setColor(Color.WHITE);
+            g2d.setColor(Colors.TEXT);
             g2d.setFont(new Font("Arial", Font.BOLD, 18));
 
             FontMetrics fm = g2d.getFontMetrics();
-            int x = (w - fm.stringWidth(initialText)) / 2;
-            int y = ((h - fm.getHeight()) / 2) + fm.getAscent();
+            int x = (panelWidth - fm.stringWidth(initialText)) / 2;
+            int y = ((panelHeight - fm.getHeight()) / 2) + fm.getAscent();
             g2d.drawString(initialText, x, y);
         }
     }

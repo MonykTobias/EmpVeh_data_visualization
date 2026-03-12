@@ -2,6 +2,7 @@ package at.fhtw.view.DetailView;
 
 import at.fhtw.model.InputDataTable;
 import at.fhtw.model.ValidationTable;
+import at.fhtw.view.DetailView.components.Colors;
 import at.fhtw.view.DetailView.components.ControlPanel;
 import at.fhtw.view.DetailView.components.DataPanel;
 import at.fhtw.view.DetailView.components.PicturePanel;
@@ -44,15 +45,19 @@ public class DetailView implements View {
             }
         };
         component.setLayout(new BorderLayout());
+        component.setBackground(Colors.BACKGROUND);
 
-        picturePanel = new PicturePanel("Picture Area", Color.decode("#4CAF50"), this);
+        picturePanel = new PicturePanel("Picture Area", this);
         dataPanel = new DataPanel(this);
 
         JSplitPane horizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, picturePanel, dataPanel);
         horizontalSplitPane.setResizeWeight(0.8);
         horizontalSplitPane.setBorder(null);
+        horizontalSplitPane.setBackground(Colors.BACKGROUND);
+        horizontalSplitPane.setDividerSize(5);
 
         bottomPanel = new JPanel(new GridBagLayout());
+        bottomPanel.setBackground(Colors.BACKGROUND);
 
         plotPanel = new PlotPanel(this);
         this.plotter = new MultiLinePlot(this.data);
@@ -76,12 +81,14 @@ public class DetailView implements View {
         bottomPanel.add(controlPanel, gbcControl);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, horizontalSplitPane, bottomPanel);
-        splitPane.setResizeWeight(0.8);
+        splitPane.setResizeWeight(0.7);
+        splitPane.setBackground(Colors.BACKGROUND);
+        splitPane.setDividerSize(5);
 
         component.add(splitPane, BorderLayout.CENTER);
 
         SwingUtilities.invokeLater(() -> {
-            splitPane.setDividerLocation(0.8);
+            splitPane.setDividerLocation(0.7);
             horizontalSplitPane.setDividerLocation(0.8);
         });
 
