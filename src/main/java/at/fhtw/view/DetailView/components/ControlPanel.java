@@ -31,90 +31,31 @@ public class ControlPanel extends JPanel {
 
         JTextField idField = new JTextField("Id", 8);
         styleTextField(idField);
-        JButton loadButton = new JButton("Load Frame");
-        styleButton(loadButton);
-        
-        loadButton.addActionListener(e -> {
-            try {
-                String text = idField.getText();
-                if (text != null && !text.trim().isEmpty()) {
-                    int id = Integer.parseInt(text.trim());
-                    // Validate ID range before setting
-                    int maxId = detailView.getData().getInputTable().size() - 1;
-                    if (id >= 0 && id <= maxId) {
-                        detailView.setCurrentId(id);
-                        detailView.reload();
-                    } else {
-                         JOptionPane.showMessageDialog(this, "ID must be between 0 and " + maxId);
-                    }
-                }
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Please enter a valid number.");
-            }
-        });
 
-        // Previous Button
-        JButton prev = new JButton("<");
-        styleButton(prev);
-        prev.addActionListener(e -> {
-            if (detailView.getCurrentId() > 0) {
-                detailView.setCurrentId(detailView.getCurrentId() - 1);
-                detailView.reload();
-            }
-        });
+        JTextField playbackSpeed = new JTextField("Speed", 8);
+        styleTextField(playbackSpeed);
 
-        // Play Button
-        JButton play = new JButton("Play/Pause");
-        styleButton(play);
-        play.addActionListener(e -> {
+        JButton loadButton = Buttons.createLoadFrameButton(detailView, idField, this);
+        JButton prev = Buttons.createPreviousFrameButton(detailView);
+        JButton play = Buttons.createPlaybackToggleButton(() -> {
             if (this.playbackMode) {
                 pausePlaybackMode();
             } else {
                 startPlaybackMode();
             }
         });
-
-        // Adjust speed of playback
-        JTextField playbackSpeed = new JTextField("Speed", 8);
-        styleTextField(playbackSpeed);
-        JButton adjustSpeed = new JButton("adjust Speed");
-        styleButton(adjustSpeed);
-        adjustSpeed.addActionListener(e -> {
-            try {
-                String text = playbackSpeed.getText();
-                 if (text != null && !text.trim().isEmpty()) {
-                    int speed = Integer.parseInt(text.trim());
-                    if (speed > 0) {
-                        this.playBackSpeed = speed;
-                        JOptionPane.showMessageDialog(this, "Successfully changed playBackSpeed to " + this.playBackSpeed + " fps ");
-                        // Restart if playing to apply new speed
-                        if (playbackMode) {
-                            pausePlaybackMode();
-                            startPlaybackMode();
-                        }
-                    } else {
-                         JOptionPane.showMessageDialog(this, "Speed must be > 0");
-                    }
-                }
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Please enter a valid number.");
+        JButton adjustSpeed = Buttons.createAdjustSpeedButton(playbackSpeed, speed -> {
+            this.playBackSpeed = speed;
+            if (playbackMode) {
+                pausePlaybackMode();
+                startPlaybackMode();
             }
-        });
-
-        // Next Button
-        JButton next = new JButton(">");
-        styleButton(next);
-        next.addActionListener(e -> {
-            if (detailView.getCurrentId() < detailView.getData().getInputTable().size() - 1) {
-                detailView.setCurrentId(detailView.getCurrentId() + 1);
-                detailView.reload();
-            }
-        });
-
-        // Plot selection Button
+        }, this);
+        JButton next = Buttons.createNextFrameButton(detailView);
+        JButton resetZoom = Buttons.createResetZoomButton(detailView::resetPlotZoom);
         JButton selectPlot = Buttons.selectPlot(detailView);
-        styleButton(selectPlot);
 
+        add(resetZoom);
         add(idField);
         add(loadButton);
         add(playbackSpeed);
@@ -123,13 +64,6 @@ public class ControlPanel extends JPanel {
         add(play);
         add(next);
         add(selectPlot);
-    }
-
-    private void styleButton(JButton button) {
-        button.setBackground(Colors.ACCENT);
-        button.setForeground(Color.WHITE);
-        button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
     }
 
     private void styleTextField(JTextField textField) {

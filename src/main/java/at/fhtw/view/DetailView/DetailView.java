@@ -81,14 +81,14 @@ public class DetailView implements View {
         bottomPanel.add(controlPanel, gbcControl);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, horizontalSplitPane, bottomPanel);
-        splitPane.setResizeWeight(0.7);
+        splitPane.setResizeWeight(0.6);
         splitPane.setBackground(Colors.BACKGROUND);
         splitPane.setDividerSize(5);
 
         component.add(splitPane, BorderLayout.CENTER);
 
         SwingUtilities.invokeLater(() -> {
-            splitPane.setDividerLocation(0.7);
+            splitPane.setDividerLocation(0.6);
             horizontalSplitPane.setDividerLocation(0.8);
         });
 
@@ -117,5 +117,8 @@ public class DetailView implements View {
         if (plotPanel != null) {
             plotPanel.setPlotter(plotter);
         }
+    }
+    public void resetPlotZoom() {
+        plotPanel.resetZoom();
     }
 }

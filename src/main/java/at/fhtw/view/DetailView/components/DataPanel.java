@@ -4,6 +4,7 @@ import at.fhtw.model.Expression;
 import at.fhtw.model.InputData;
 import at.fhtw.model.Validation;
 import at.fhtw.view.DetailView.DetailView;
+import at.fhtw.view.DetailView.components.buttons.Buttons;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -160,12 +161,7 @@ public class DataPanel extends JPanel {
         styleTextField(validationToIdField);
         addRow.accept("To ID (opt.):", validationToIdField);
 
-        validateButton = new JButton("Validate Frame(s)");
-        validateButton.setBackground(Colors.ACCENT);
-        validateButton.setForeground(Color.WHITE);
-        validateButton.setFocusPainted(false);
-        validateButton.setFont(new Font("Arial", Font.BOLD, 12));
-        validateButton.addActionListener(e -> validateCurrentFrame());
+        validateButton = Buttons.createValidateFramesButton(this::validateCurrentFrame);
 
         gbc.gridx = 0;
         gbc.gridwidth = 2;

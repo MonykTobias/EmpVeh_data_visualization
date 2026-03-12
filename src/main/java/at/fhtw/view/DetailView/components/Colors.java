@@ -11,6 +11,7 @@ public class Colors {
     public static final Color TEXT = new Color(0xE0E0E0); // Light Gray
     public static final Color ACCENT = new Color(0x00A8E8); // Bright Blue
     public static final Color SUCCESS = new Color(0x00C49A); // Green
+    public static final Color SECONDARY = new Color(0xFF4500);
     public static final Color ERROR = new Color(0xFF6B6B); // Red
 
     public static final Map<Expression, Color> EXPRESSION_COLORS = Map.of(
