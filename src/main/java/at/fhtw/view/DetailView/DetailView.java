@@ -4,20 +4,16 @@ import at.fhtw.model.InputDataTable;
 import at.fhtw.model.ValidationTable;
 import at.fhtw.view.DetailView.components.ControlPanel;
 import at.fhtw.view.DetailView.components.DataPanel;
-import at.fhtw.view.DetailView.components.ImagePanel;
+import at.fhtw.view.DetailView.components.PicturePanel;
 import at.fhtw.view.DetailView.components.plots.IPlot;
 import at.fhtw.view.DetailView.components.plots.MultiLinePlot;
-import at.fhtw.view.DetailView.components.plots.PlotPanel;
+import at.fhtw.view.DetailView.components.PlotPanel;
 import at.fhtw.view.View;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 
 @Getter
 @Setter
@@ -28,7 +24,7 @@ public class DetailView implements View {
     private final ValidationTable validationTable;
 
     private DataPanel dataPanel;
-    private ImagePanel imagePanel;
+    private PicturePanel picturePanel;
     private PlotPanel plotPanel;
     private IPlot plotter;
     private JPanel bottomPanel;
@@ -49,12 +45,10 @@ public class DetailView implements View {
         };
         component.setLayout(new BorderLayout());
 
-        imagePanel = new ImagePanel("Picture Area", Color.decode("#4CAF50"));
-        imagePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
-
+        picturePanel = new PicturePanel("Picture Area", Color.decode("#4CAF50"), this);
         dataPanel = new DataPanel(this);
 
-        JSplitPane horizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, imagePanel, dataPanel);
+        JSplitPane horizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, picturePanel, dataPanel);
         horizontalSplitPane.setResizeWeight(0.8);
         horizontalSplitPane.setBorder(null);
 
@@ -96,7 +90,7 @@ public class DetailView implements View {
     }
 
     public void reload() {
-        loadPicture();
+        picturePanel.loadPicture();
         dataPanel.loadData();
         plotPanel.updateMarker();
     }
@@ -104,47 +98,6 @@ public class DetailView implements View {
     @Override
     public String getTitle() {
         return "Bildanzeige";
-    }
-
-    private void loadPicture() {
-        if (!SwingUtilities.isEventDispatchThread()) {
-            SwingUtilities.invokeLater(this::loadPicture);
-            return;
-        }
-
-        if (imagePanel == null) {
-            System.err.println("Error: Image Panel is not initialized.");
-            return;
-        }
-
-        String imagePath = String.format("%s%sframe_%06d.jpg", FOLDERPATH, File.separator, currentId);
-
-        try {
-            BufferedImage originalImage;
-
-            try {
-                File imageFile = new File(imagePath);
-                if (!imageFile.exists()) {
-                    throw new IOException("File not found at: " + imagePath);
-                }
-                originalImage = ImageIO.read(imageFile);
-
-            } catch (IOException e) {
-                throw new IOException("Failed to load or read image file: " + imagePath, e);
-            }
-
-            if (originalImage == null) {
-                throw new IOException("ImageIO could not decode the image file: " + imagePath);
-            }
-
-            imagePanel.setImage(originalImage);
-            imagePanel.repaint();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            imagePanel.setErrorText("Error loading image: " + e.getMessage());
-            imagePanel.repaint();
-        }
     }
 
     public void refreshPlotLayout() {

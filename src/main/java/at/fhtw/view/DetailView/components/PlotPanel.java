@@ -1,6 +1,7 @@
-package at.fhtw.view.DetailView.components.plots;
+package at.fhtw.view.DetailView.components;
 
 import at.fhtw.view.DetailView.DetailView;
+import at.fhtw.view.DetailView.components.plots.IPlot;
 import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
 
