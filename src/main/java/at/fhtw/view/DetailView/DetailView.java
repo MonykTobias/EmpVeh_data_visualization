@@ -6,9 +6,10 @@ import at.fhtw.view.DetailView.components.Colors;
 import at.fhtw.view.DetailView.components.ControlPanel;
 import at.fhtw.view.DetailView.components.DataPanel;
 import at.fhtw.view.DetailView.components.PicturePanel;
+import at.fhtw.view.DetailView.components.PlotPanel;
+import at.fhtw.view.DetailView.components.ValidationTimelinePanel;
 import at.fhtw.view.DetailView.components.plots.IPlot;
 import at.fhtw.view.DetailView.components.plots.MultiLinePlot;
-import at.fhtw.view.DetailView.components.PlotPanel;
 import at.fhtw.view.View;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,6 +28,7 @@ public class DetailView implements View {
     private DataPanel dataPanel;
     private PicturePanel picturePanel;
     private PlotPanel plotPanel;
+    private ValidationTimelinePanel validationTimelinePanel;
     private IPlot plotter;
     private JPanel bottomPanel;
 
@@ -62,7 +64,9 @@ public class DetailView implements View {
         plotPanel = new PlotPanel(this);
         this.plotter = new MultiLinePlot(this.data);
         plotPanel.setPlotter(this.plotter);
-        
+
+        validationTimelinePanel = new ValidationTimelinePanel(this);
+
         GridBagConstraints gbcPlot = new GridBagConstraints();
         gbcPlot.fill = GridBagConstraints.BOTH;
         gbcPlot.gridx = 0;
@@ -71,11 +75,19 @@ public class DetailView implements View {
         gbcPlot.weighty = 1.0;
         bottomPanel.add(plotPanel, gbcPlot);
 
+        GridBagConstraints gbcTimeline = new GridBagConstraints();
+        gbcTimeline.fill = GridBagConstraints.HORIZONTAL;
+        gbcTimeline.gridx = 0;
+        gbcTimeline.gridy = 1;
+        gbcTimeline.weightx = 1.0;
+        gbcTimeline.weighty = 0;
+        bottomPanel.add(validationTimelinePanel, gbcTimeline);
+
         ControlPanel controlPanel = new ControlPanel(this);
         GridBagConstraints gbcControl = new GridBagConstraints();
         gbcControl.fill = GridBagConstraints.HORIZONTAL;
         gbcControl.gridx = 0;
-        gbcControl.gridy = 1;
+        gbcControl.gridy = 2;
         gbcControl.weightx = 1.0;
         gbcControl.weighty = 0;
         bottomPanel.add(controlPanel, gbcControl);
@@ -100,6 +112,9 @@ public class DetailView implements View {
         picturePanel.loadPicture();
         dataPanel.loadData();
         plotPanel.updateMarker();
+        if (validationTimelinePanel != null) {
+            validationTimelinePanel.repaint();
+        }
     }
 
     @Override
@@ -118,6 +133,7 @@ public class DetailView implements View {
             plotPanel.setPlotter(plotter);
         }
     }
+
     public void resetPlotZoom() {
         plotPanel.resetZoom();
     }

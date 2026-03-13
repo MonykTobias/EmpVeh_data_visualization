@@ -159,7 +159,7 @@ public class PlotPanel extends JPanel {
     private void moveViewportToCurrentFrame(int currentId, double width) {
         int maxId = detailView.getData().getInputTable().size() - 1;
 
-        double newMin = currentId - width * 0.7;
+        double newMin = currentId - width * 0.1;
         double newMax = newMin + width;
 
         if (newMin < 0) {

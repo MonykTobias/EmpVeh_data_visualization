@@ -252,6 +252,7 @@ public class DataPanel extends JPanel {
         }
 
         validationStatusLabel.setForeground(Colors.SUCCESS);
+        detailView.reload();
 
         if (count == 1) {
             JOptionPane.showMessageDialog(null, "Validated frame " + currentId);
