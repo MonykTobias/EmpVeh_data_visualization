@@ -32,7 +32,8 @@ public class Controller {
         mainFrame = new JFrame("Data Visualization App");
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainFrame.setLayout(new BorderLayout());
-        mainFrame.setSize(1200, 800);
+        //mainFrame.setSize(1200, 800);
+        mainFrame.setExtendedState(JFrame.MAXIMIZED_BOTH); // Set to full screen with borders
 
         // Create the top navigation/selection bar
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
