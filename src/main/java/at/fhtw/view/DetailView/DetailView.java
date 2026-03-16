@@ -53,7 +53,7 @@ public class DetailView implements View {
         dataPanel = new DataPanel(this);
 
         JSplitPane horizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, picturePanel, dataPanel);
-        horizontalSplitPane.setResizeWeight(0.8);
+        horizontalSplitPane.setResizeWeight(0.6);
         horizontalSplitPane.setBorder(null);
         horizontalSplitPane.setBackground(Colors.BACKGROUND);
         horizontalSplitPane.setDividerSize(5);
@@ -93,15 +93,15 @@ public class DetailView implements View {
         bottomPanel.add(controlPanel, gbcControl);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, horizontalSplitPane, bottomPanel);
-        splitPane.setResizeWeight(0.6);
+        splitPane.setResizeWeight(0.5);
         splitPane.setBackground(Colors.BACKGROUND);
         splitPane.setDividerSize(5);
 
         component.add(splitPane, BorderLayout.CENTER);
 
         SwingUtilities.invokeLater(() -> {
-            splitPane.setDividerLocation(0.6);
-            horizontalSplitPane.setDividerLocation(0.8);
+            splitPane.setDividerLocation(0.5);
+            horizontalSplitPane.setDividerLocation(0.5);
         });
 
         reload();
