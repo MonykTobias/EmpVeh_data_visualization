@@ -1,14 +1,17 @@
 package at.fhtw.view.DetailView.components;
 
+import at.fhtw.model.Expression;
 import at.fhtw.view.DetailView.DetailView;
 import at.fhtw.view.DetailView.components.plots.IPlot;
 import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
+import org.knowm.xchart.XYSeries;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Rectangle2D;
 
 public class PlotPanel extends JPanel {
     private static final int CLICK_DRAG_TOLERANCE = 5;
@@ -16,6 +19,7 @@ public class PlotPanel extends JPanel {
     private final DetailView detailView;
     private IPlot plotter;
     private XChartPanel<XYChart> chartPanel;
+    private XYChart chart;
 
     private Double visibleXMin;
     private Double visibleXMax;
@@ -30,15 +34,43 @@ public class PlotPanel extends JPanel {
             this.remove(chartPanel);
         }
 
-        XYChart chart = this.plotter.getChart();
+        chart = this.plotter.getChart();
         configureChart(chart);
 
         chartPanel = new XChartPanel<>(chart);
         installMouseHandling(chart);
+        styleChart(chart);
+
 
         this.add(chartPanel, BorderLayout.CENTER);
         this.revalidate();
         this.repaint();
+    }
+
+    private void styleChart(XYChart chart){
+        chart.getStyler().setLegendVisible(false);
+        chart.getStyler().setYAxisTicksVisible(false);
+        //chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNE);
+        chart.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Area);
+        chart.getStyler().setMarkerSize(0);
+        chart.getStyler().setYAxisMin(0.0);
+        chart.getStyler().setYAxisMax(1.0);
+        chart.getStyler().setPlotContentSize(1.0);
+
+        chart.getStyler().setPlotBackgroundColor(Colors.PANEL_BACKGROUND);
+        chart.getStyler().setChartBackgroundColor(Colors.PANEL_BACKGROUND);
+        chart.getStyler().setChartFontColor(Colors.TEXT);
+        chart.getStyler().setLegendBackgroundColor(Colors.BACKGROUND);
+        chart.getStyler().setAxisTickLabelsColor(Colors.TEXT);
+
+        // Set consistent series colors
+        Color[] seriesColors = new Color[] {
+                Colors.EXPRESSION_COLORS.get(Expression.ANGER),
+                Colors.EXPRESSION_COLORS.get(Expression.SURPRISE),
+                Colors.EXPRESSION_COLORS.get(Expression.HAPPY),
+                Colors.EXPRESSION_COLORS.get(Expression.NEUTRAL)
+        };
+        chart.getStyler().setSeriesColors(seriesColors);
     }
 
     public void resetZoom() {

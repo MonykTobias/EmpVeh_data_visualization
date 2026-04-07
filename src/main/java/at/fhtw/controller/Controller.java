@@ -118,7 +118,8 @@ public class Controller {
         if (currentView instanceof DetailView) {
             DetailView detailView = (DetailView) currentView;
             String csvPath = csvPathField.getText();
-            String validationCsvPath = csvPath.substring(0, csvPath.lastIndexOf(File.separator)) + File.separator + "validation.csv";
+            String folderPath = folderPathField.getText();
+            String validationCsvPath = getValidationCsvPath(csvPath, folderPath);
             try {
                 CsvConverter<ValidationTable> converter = new CsvConverter<>(ValidationTable.class);
                 String content = converter.serialize(detailView.getValidationTable());
@@ -143,13 +144,13 @@ public class Controller {
             CsvConverter<InputDataTable> csvConverter = new CsvConverter<>(InputDataTable.class);
             InputDataTable table = csvConverter.deserialize(csvContent);
             System.out.println("Input Table: Loaded rows: " + table.getInputTable().size());
-            
-            // get Validation Table (Same folder as Input Table)
-            String validationCsvPath = csvPath.substring(0, csvPath.lastIndexOf(File.separator)) + File.separator + "validation.csv";
+
+            // get Validation Table (Same folder as Input Table, named validation<folder-name>.csv)
+            String validationCsvPath = getValidationCsvPath(csvPath, folderPath);
             File validationFile = new File(validationCsvPath);
             ValidationTable validationTable;
             CsvConverter<ValidationTable> validationTableCsvConverter = new CsvConverter<>(ValidationTable.class);
-            
+
             if (validationFile.exists()) {
                 csvContent = Files.readString(Paths.get(validationCsvPath));
                 validationTable = validationTableCsvConverter.deserialize(csvContent);
@@ -157,17 +158,17 @@ public class Controller {
             } else {
                 System.out.println("Validation Table not found. Creating a new one.");
                 validationTable = new ValidationTable();
-                
+
                 // Initialize validation table with default values for all frames
                 for (InputData inputData : table.getInputTable()) {
                     Validation validation = new Validation(inputData);
                     validationTable.getValidationTable().put(inputData.getId(), validation);
                 }
-                
+
                 // Save the new initialized table to the file
                 String serializedTable = validationTableCsvConverter.serialize(validationTable);
                 Files.writeString(Paths.get(validationCsvPath), serializedTable);
-                System.out.println("Created new validation.csv at: " + validationCsvPath);
+                System.out.println("Created new validation CSV at: " + validationCsvPath);
             }
             
             if(!table.getInputTable().isEmpty()){
@@ -190,6 +191,21 @@ public class Controller {
         this.currentView = newView;
         contentPanel.revalidate(); // Re-layout the panel
         contentPanel.repaint(); // Repaint the panel
+    }
+
+    /**
+     * Generates the validation CSV path based on the input CSV name.
+     * Format: validation<input-csv-name>.csv
+     */
+    private String getValidationCsvPath(String csvPath, String folderPath) {
+        String csvDirectory = csvPath.substring(0, csvPath.lastIndexOf(File.separator));
+        File csvFile = new File(csvPath);
+        String csvFileName = csvFile.getName();
+        // Remove .csv extension if present
+        String csvBaseName = csvFileName.endsWith(".csv")
+            ? csvFileName.substring(0, csvFileName.length() - 4)
+            : csvFileName;
+        return csvDirectory + File.separator + "validation" + csvBaseName + ".csv";
     }
 
     // This is a helper functional interface to simplify DocumentListener implementation

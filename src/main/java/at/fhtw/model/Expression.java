@@ -4,5 +4,7 @@ public enum Expression {
     NEUTRAL,
     HAPPY,
     SURPRISE,
-    ANGER;
+    ANGER,
+    UNDEFINED,
+    NULL;
 }

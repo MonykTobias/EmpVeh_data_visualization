@@ -1,5 +1,6 @@
 package at.fhtw.model.helpers;
 
+import at.fhtw.model.Expression;
 import at.fhtw.model.InputData;
 import at.fhtw.model.InputDataTable;
 import at.fhtw.model.Validation;
@@ -9,12 +10,10 @@ import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CsvConverter<T> extends BaseConverter<T> {
     CsvSchema schema;
@@ -58,11 +57,14 @@ public class CsvConverter<T> extends BaseConverter<T> {
             CsvSchema schema = CsvSchema.emptySchema().withHeader(); // read headers from first line
 
             if (type.equals(InputDataTable.class)) {
+                // Preprocess CSV content to handle NULL expressions and empty values
+                String preprocessedContent = preprocessInputDataCsv(csvContent);
+
                 // Read rows as InputData list
                 MappingIterator<InputData> it = csvMapper
                         .readerFor(InputData.class)
                         .with(schema)
-                        .readValues(new StringReader(csvContent));
+                        .readValues(new StringReader(preprocessedContent));
 
                 List<InputData> list = it.readAll();
                 InputDataTable table = new InputDataTable(list);
@@ -95,5 +97,102 @@ public class CsvConverter<T> extends BaseConverter<T> {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Preprocesses CSV content for InputData to handle special cases:
+     * - Rows with empty expression_best are set to NULL
+     * - Empty numeric values are replaced with 0.0
+     * - Removes extra columns beyond the 12 expected fields
+     * - Auto-assigns row IDs if first column is empty
+     */
+    private String preprocessInputDataCsv(String csvContent) throws IOException {
+        BufferedReader reader = new BufferedReader(new StringReader(csvContent));
+        StringBuilder result = new StringBuilder();
+
+        String headerLine = reader.readLine();
+        if (headerLine == null) {
+            return csvContent;
+        }
+
+        // Process header to limit to exactly 12 columns and fix empty first column
+        String processedHeader = processHeaderLine(headerLine);
+        result.append(processedHeader).append("\n");
+
+        String line;
+        int rowId = 0;
+        while ((line = reader.readLine()) != null) {
+            String processedLine = processInputDataLine(line, rowId);
+            result.append(processedLine).append("\n");
+            rowId++;
+        }
+
+        return result.toString();
+    }
+
+    /**
+     * Processes the header line to limit to exactly 12 columns and replace empty first column with "id"
+     */
+    private String processHeaderLine(String line) {
+        String[] parts = line.split(",", -1);
+        String[] limitedParts = new String[12];
+
+        for (int i = 0; i < 12; i++) {
+            if (i < parts.length) {
+                limitedParts[i] = parts[i];
+            } else {
+                limitedParts[i] = "";
+            }
+        }
+
+        // Replace empty first column with "id"
+        if (limitedParts[0].trim().isEmpty()) {
+            limitedParts[0] = "id";
+        }
+
+        return String.join(",", limitedParts);
+    }
+
+    /**
+     * Processes a single CSV line for InputData.
+     * Expected format: id,timestamp,expression_best,confidence,neutral,happy,surprise,anger,presence,pitch,roll,yaw
+     * Handles empty expression_best by setting it to NULL and fills empty numeric values with 0.0
+     * Auto-assigns ID if the first column is empty
+     */
+    private String processInputDataLine(String line, int autoId) {
+        String[] parts = line.split(",", -1); // -1 to include trailing empty strings
+
+        // Limit to exactly 12 columns
+        String[] limitedParts = new String[12];
+        for (int i = 0; i < 12; i++) {
+            if (i < parts.length) {
+                limitedParts[i] = parts[i];
+            } else {
+                limitedParts[i] = "";
+            }
+        }
+        parts = limitedParts;
+
+        // Column indices (0-based):
+        // 0: id, 1: timestamp, 2: expression_best, 3-10: confidence values, 11: yaw
+
+        // Auto-assign ID if first column is empty
+        if (parts[0].trim().isEmpty()) {
+            parts[0] = String.valueOf(autoId);
+        }
+
+        // Check if expression_best (index 2) is empty or null
+        if (parts[2].trim().isEmpty() || parts[2].trim().equalsIgnoreCase("null")) {
+            parts[2] = "NULL";
+        }
+
+        // Fill empty numeric values with 0.0 (columns 3-11)
+        for (int i = 3; i < 12; i++) {
+            if (parts[i].trim().isEmpty()) {
+                parts[i] = "0.0";
+            }
+        }
+
+        return String.join(",", parts);
     }
 }
