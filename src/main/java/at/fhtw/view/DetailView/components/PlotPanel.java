@@ -11,6 +11,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Rectangle2D;
 
 public class PlotPanel extends JPanel {
     private static final int CLICK_DRAG_TOLERANCE = 5;
@@ -18,6 +19,7 @@ public class PlotPanel extends JPanel {
     private final DetailView detailView;
     private IPlot plotter;
     private XChartPanel<XYChart> chartPanel;
+    private XYChart chart;
 
     private Double visibleXMin;
     private Double visibleXMax;
@@ -32,7 +34,7 @@ public class PlotPanel extends JPanel {
             this.remove(chartPanel);
         }
 
-        XYChart chart = this.plotter.getChart();
+        chart = this.plotter.getChart();
         configureChart(chart);
 
         chartPanel = new XChartPanel<>(chart);
@@ -70,7 +72,7 @@ public class PlotPanel extends JPanel {
         };
         chart.getStyler().setSeriesColors(seriesColors);
     }
-    
+
     public void resetZoom() {
         visibleXMin = null;
         visibleXMax = null;
