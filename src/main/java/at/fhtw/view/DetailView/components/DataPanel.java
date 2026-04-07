@@ -193,7 +193,14 @@ public class DataPanel extends JPanel {
         DecimalFormat df = new DecimalFormat("0.000");
 
         idValueLabel.setText(String.valueOf(inputData.getId()));
-        expressionBestValueLabel.setText(inputData.getExpression_best().name());
+
+        // Display expression with special formatting for UNDEFINED and NULL
+        Expression expression = inputData.getExpression_best();
+        String expressionText = expression.name();
+        if (expression == Expression.UNDEFINED || expression == Expression.NULL) {
+            expressionText = "<html><b><font color='orange'>" + expressionText + "</font></b></html>";
+        }
+        expressionBestValueLabel.setText(expressionText);
         expressionBestConfidenceValueLabel.setText(df.format(inputData.getExpression_best_confidence()));
 
         neutralConfidenceValueLabel.setText(df.format(inputData.getExpression_neutral_confidence()));
@@ -212,8 +219,14 @@ public class DataPanel extends JPanel {
                 validationStatusLabel.setForeground(Colors.ERROR);
             }
         } else {
-            validationExpressionComboBox.setSelectedItem(inputData.getExpression_best());
-            validationCommentField.setText("");
+            // For UNDEFINED or NULL expressions, suggest user to validate
+            if (expression == Expression.UNDEFINED || expression == Expression.NULL) {
+                validationExpressionComboBox.setSelectedItem(Expression.NEUTRAL);
+                validationCommentField.setText("Please verify expression");
+            } else {
+                validationExpressionComboBox.setSelectedItem(inputData.getExpression_best());
+                validationCommentField.setText("");
+            }
             validationStatusLabel.setForeground(Colors.ERROR);
         }
         validationToIdField.setText("");

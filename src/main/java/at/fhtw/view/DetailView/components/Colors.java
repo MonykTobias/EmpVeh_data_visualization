@@ -18,6 +18,8 @@ public class Colors {
             Expression.NEUTRAL, new Color(0x9E9E9E),   // Gray
             Expression.HAPPY, new Color(0xFFD700),    // Gold
             Expression.SURPRISE, new Color(0x00BFFF), // Deep Sky Blue
-            Expression.ANGER, new Color(0xFF4500)     // Orange Red
+            Expression.ANGER, new Color(0xFF4500),    // Orange Red
+            Expression.UNDEFINED, new Color(0x92E82F), // green
+            Expression.NULL, new Color(0x00000) // black
     );
 }
