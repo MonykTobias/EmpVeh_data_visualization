@@ -1,16 +1,11 @@
 package at.fhtw.view.DetailView.components.plots;
 
-import at.fhtw.model.Expression;
 import at.fhtw.model.InputData;
 import at.fhtw.model.InputDataTable;
-import at.fhtw.view.DetailView.components.Colors;
 import lombok.Getter;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
-import org.knowm.xchart.XYSeries;
-import org.knowm.xchart.style.Styler;
 
-import java.awt.Color;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -55,6 +50,8 @@ public class StackedPlot extends Plot {
         chart.addSeries("surprise", frameData, surpriseStacked);
         chart.addSeries("happy", frameData, happyStacked);
         chart.addSeries("neutral", frameData, neutralData);
+
+        applyCommonFormatting();
 
         return chart;
     }
