@@ -6,6 +6,7 @@ import at.fhtw.view.DetailView.components.plots.IPlot;
 import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYSeries;
+import org.knowm.xchart.style.Styler;
 
 import javax.swing.*;
 import java.awt.*;
@@ -48,9 +49,9 @@ public class PlotPanel extends JPanel {
     }
 
     private void styleChart(XYChart chart){
-        chart.getStyler().setLegendVisible(false);
+        chart.getStyler().setLegendVisible(true);
         chart.getStyler().setYAxisTicksVisible(false);
-        //chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNE);
+        chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNE);
         chart.getStyler().setDefaultSeriesRenderStyle(XYSeries.XYSeriesRenderStyle.Area);
         chart.getStyler().setMarkerSize(0);
         chart.getStyler().setYAxisMin(0.0);
@@ -60,7 +61,6 @@ public class PlotPanel extends JPanel {
         chart.getStyler().setPlotBackgroundColor(Colors.PANEL_BACKGROUND);
         chart.getStyler().setChartBackgroundColor(Colors.PANEL_BACKGROUND);
         chart.getStyler().setChartFontColor(Colors.TEXT);
-        chart.getStyler().setLegendBackgroundColor(Colors.BACKGROUND);
         chart.getStyler().setAxisTickLabelsColor(Colors.TEXT);
 
         // Set consistent series colors

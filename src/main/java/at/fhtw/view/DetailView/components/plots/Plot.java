@@ -1,8 +1,11 @@
 package at.fhtw.view.DetailView.components.plots;
 
+import at.fhtw.model.Expression;
 import at.fhtw.model.InputDataTable;
+import at.fhtw.view.DetailView.components.Colors;
 import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYSeries;
+import org.knowm.xchart.style.Styler;
 import org.knowm.xchart.style.markers.None;
 
 import java.awt.*;
@@ -15,6 +18,38 @@ public abstract class Plot implements IPlot{
     protected Plot(InputDataTable table) {
         this.inputTable = table;
         this.chart = null;
+    }
+
+    protected void applyCommonFormatting() {
+        if (chart == null) return;
+
+        chart.getStyler().setLegendVisible(true);
+        chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNE);
+        chart.getStyler().setChartBackgroundColor(Colors.PANEL_BACKGROUND);
+        chart.getStyler().setPlotBackgroundColor(Colors.PANEL_BACKGROUND);
+        chart.getStyler().setChartFontColor(Colors.TEXT);
+        chart.getStyler().setLegendBackgroundColor(Colors.PANEL_BACKGROUND);
+        chart.getStyler().setLegendBorderColor(Colors.BORDER);
+        chart.getStyler().setPlotBorderVisible(false);
+        chart.getStyler().setAxisTickLabelsColor(Colors.TEXT);
+
+        // Apply colors to specific series if they exist
+        if (chart.getSeriesMap().containsKey("neutral")) {
+            chart.getSeriesMap().get("neutral").setLineColor(Colors.EXPRESSION_COLORS.get(Expression.NEUTRAL));
+            chart.getSeriesMap().get("neutral").setMarker(new None());
+        }
+        if (chart.getSeriesMap().containsKey("happy")) {
+            chart.getSeriesMap().get("happy").setLineColor(Colors.EXPRESSION_COLORS.get(Expression.HAPPY));
+            chart.getSeriesMap().get("happy").setMarker(new None());
+        }
+        if (chart.getSeriesMap().containsKey("surprise")) {
+            chart.getSeriesMap().get("surprise").setLineColor(Colors.EXPRESSION_COLORS.get(Expression.SURPRISE));
+            chart.getSeriesMap().get("surprise").setMarker(new None());
+        }
+        if (chart.getSeriesMap().containsKey("anger")) {
+            chart.getSeriesMap().get("anger").setLineColor(Colors.EXPRESSION_COLORS.get(Expression.ANGER));
+            chart.getSeriesMap().get("anger").setMarker(new None());
+        }
     }
 
     @Override
