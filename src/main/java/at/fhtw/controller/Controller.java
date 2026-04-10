@@ -118,9 +118,14 @@ public class Controller {
         if (currentView instanceof DetailView) {
             DetailView detailView = (DetailView) currentView;
             String csvPath = csvPathField.getText();
-            String folderPath = folderPathField.getText();
-            String validationCsvPath = getValidationCsvPath(csvPath, folderPath);
+            String validationCsvPath = getValidationCsvPath(csvPath);
             try {
+                File validationFile = new File(validationCsvPath);
+                File parentDir = validationFile.getParentFile();
+                if (!parentDir.exists()) {
+                    parentDir.mkdirs();
+                }
+
                 CsvConverter<ValidationTable> converter = new CsvConverter<>(ValidationTable.class);
                 String content = converter.serialize(detailView.getValidationTable());
                 Files.writeString(Paths.get(validationCsvPath), content);
@@ -145,8 +150,8 @@ public class Controller {
             InputDataTable table = csvConverter.deserialize(csvContent);
             System.out.println("Input Table: Loaded rows: " + table.getInputTable().size());
 
-            // get Validation Table (Same folder as Input Table, named validation<folder-name>.csv)
-            String validationCsvPath = getValidationCsvPath(csvPath, folderPath);
+            // get Validation Table (In validations folder, named validation_<input-csv-name>.csv)
+            String validationCsvPath = getValidationCsvPath(csvPath);
             File validationFile = new File(validationCsvPath);
             ValidationTable validationTable;
             CsvConverter<ValidationTable> validationTableCsvConverter = new CsvConverter<>(ValidationTable.class);
@@ -163,6 +168,12 @@ public class Controller {
                 for (InputData inputData : table.getInputTable()) {
                     Validation validation = new Validation(inputData);
                     validationTable.getValidationTable().put(inputData.getId(), validation);
+                }
+
+                // Create validations directory if it doesn't exist
+                File parentDir = validationFile.getParentFile();
+                if (!parentDir.exists()) {
+                    parentDir.mkdirs();
                 }
 
                 // Save the new initialized table to the file
@@ -194,18 +205,20 @@ public class Controller {
     }
 
     /**
-     * Generates the validation CSV path based on the input CSV name.
-     * Format: validation<input-csv-name>.csv
+     * Generates the validation CSV path in a "validations" subfolder.
+     * Format: <input-csv-directory>/validations/validation_<input-csv-name>.csv
      */
-    private String getValidationCsvPath(String csvPath, String folderPath) {
-        String csvDirectory = csvPath.substring(0, csvPath.lastIndexOf(File.separator));
+    private String getValidationCsvPath(String csvPath) {
         File csvFile = new File(csvPath);
+        String csvDirectory = csvFile.getParent();
         String csvFileName = csvFile.getName();
+        
         // Remove .csv extension if present
         String csvBaseName = csvFileName.endsWith(".csv")
             ? csvFileName.substring(0, csvFileName.length() - 4)
             : csvFileName;
-        return csvDirectory + File.separator + "validation" + csvBaseName + ".csv";
+            
+        return csvDirectory + File.separator + "validations" + File.separator + "validation_" + csvBaseName + ".csv";
     }
 
     // This is a helper functional interface to simplify DocumentListener implementation
