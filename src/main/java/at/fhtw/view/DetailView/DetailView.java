@@ -112,6 +112,7 @@ public class DetailView implements View {
         picturePanel.loadPicture();
         dataPanel.loadData();
         plotPanel.updateMarker();
+
         if (validationTimelinePanel != null) {
             validationTimelinePanel.repaint();
         }

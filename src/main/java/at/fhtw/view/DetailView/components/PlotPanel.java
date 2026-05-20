@@ -12,7 +12,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Rectangle2D;
 
 public class PlotPanel extends JPanel {
     private static final int CLICK_DRAG_TOLERANCE = 5;
@@ -38,7 +37,13 @@ public class PlotPanel extends JPanel {
         chart = this.plotter.getChart();
         configureChart(chart);
 
-        chartPanel = new XChartPanel<>(chart);
+        chartPanel = new XChartPanel<>(chart) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                repaintValidationTimeline();
+            }
+        };
         installMouseHandling(chart);
         styleChart(chart);
 
@@ -80,6 +85,8 @@ public class PlotPanel extends JPanel {
         if (plotter != null) {
             rebuildChart();
         }
+
+        repaintValidationTimeline();
     }
 
     public void updateMarker() {
@@ -95,6 +102,7 @@ public class PlotPanel extends JPanel {
             if (width > 0 && (currentId < visibleXMin || currentId > visibleXMax)) {
                 moveViewportToCurrentFrame(currentId, width);
                 rebuildChart();
+                repaintValidationTimeline();
                 return;
             }
         }
@@ -153,6 +161,7 @@ public class PlotPanel extends JPanel {
                 if (!isClick) {
                     storeZoomRange(chart, mousePressedPoint, e.getPoint());
                     rebuildChart();
+                    repaintValidationTimeline();
                     return;
                 }
 
@@ -206,5 +215,50 @@ public class PlotPanel extends JPanel {
 
         visibleXMin = newMin;
         visibleXMax = newMax;
+    }
+
+    public double getVisibleXMin() {
+        return visibleXMin != null ? visibleXMin : 0.0;
+    }
+
+    public double getVisibleXMax() {
+        int frameCount = detailView.getData().getInputTable().size();
+        double maxId = Math.max(0, frameCount - 1);
+        return visibleXMax != null ? visibleXMax : maxId;
+    }
+
+    public int getScreenXForFrame(double frame) {
+        if (chart == null || chartPanel == null || chartPanel.getWidth() <= 0) {
+            return 0;
+        }
+
+        double screenX = chart.getScreenXFromChart(frame);
+        if (Double.isFinite(screenX)) {
+            return (int) Math.round(screenX);
+        }
+
+        double visibleMin = getVisibleXMin();
+        double visibleMax = getVisibleXMax();
+        if (visibleMax <= visibleMin) {
+            return 0;
+        }
+
+        double ratio = (frame - visibleMin) / (visibleMax - visibleMin);
+        return (int) Math.round(ratio * chartPanel.getWidth());
+    }
+
+    public boolean isPlotCoordinateReady() {
+        if (chart == null || chartPanel == null || chartPanel.getWidth() <= 0) {
+            return false;
+        }
+
+        return Double.isFinite(chart.getScreenXFromChart(getVisibleXMin()))
+                && Double.isFinite(chart.getScreenXFromChart(getVisibleXMax()));
+    }
+
+    private void repaintValidationTimeline() {
+        if (detailView.getValidationTimelinePanel() != null) {
+            detailView.getValidationTimelinePanel().repaint();
+        }
     }
 }
