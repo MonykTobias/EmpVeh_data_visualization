@@ -13,6 +13,10 @@ The tool supports the analysis and validation of AI-generated emotion recognitio
 * Batch validation of frame ranges
 * CSV-based persistence of validation results
 
+### Screenshots
+
+![assets/screenshot_app.png](assets/screenshot_app.png)
+
 ## Prerequisites
 
 *   **Java Development Kit (JDK) 21** or higher.
