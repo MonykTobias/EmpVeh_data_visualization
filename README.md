@@ -1,6 +1,17 @@
-# EmpVeh_data_visualization
+# Empathic Vehicle – Data Visualization & Validation Tool
 
-This project is a Java-based data visualization tool for analyzing emotion recognition data from vehicle simulations. It allows users to view frame-by-frame video data alongside emotion confidence scores and validate the ground truth.
+Java-based application developed as part of the **Empathic Vehicle research project at FH Technikum Wien in collaboration with TU Wien and emotion3D**.
+
+The tool supports the analysis and validation of AI-generated emotion recognition data from driving experiments. It combines recorded frames with emotion confidence scores, metadata and human annotations in an interactive visualization interface.
+
+### Key Features
+
+* Frame-by-frame inspection of recorded driving data
+* Interactive visualization of emotion confidence scores over time
+* Navigation between video frames directly through the timeline
+* Human validation and correction of AI-generated emotion classifications
+* Batch validation of frame ranges
+* CSV-based persistence of validation results
 
 ## Prerequisites
 
